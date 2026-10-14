@@ -423,3 +423,39 @@ box-shadow:0 14px 36px rgba(2,8,30,.55),inset 0 1px 0 rgba(220,244,255,.55),inse
 
 :root:not([data-theme=light]){--facets:linear-gradient(115deg,transparent 0 22%,rgba(200,235,255,.2) 22.4%,transparent 23% 47%,rgba(200,235,255,.12) 47.3%,transparent 48% 71%,rgba(200,235,255,.18) 71.3%,transparent 72%),linear-gradient(63deg,transparent 0 34%,rgba(150,210,255,.14) 34.3%,transparent 35% 63%,rgba(200,235,255,.1) 63.3%,transparent 64%),radial-gradient(circle at 12% 8%,rgba(200,235,255,.16),transparent 22%),radial-gradient(circle at 90% 94%,rgba(130,200,255,.16),transparent 30%)}
 :root:not([data-theme=light]) .muted,:root:not([data-theme=light]) .glass p{color:#c3d3ee}
+
+/* liquid crystal ice-cube theme (v3). Revert tag: pre-liquid (older ice: pre-ice2) */
+:root{--lq:radial-gradient(120% 90% at 8% 0%,rgba(255,255,255,.55),transparent 42%),radial-gradient(90% 70% at 100% 100%,rgba(150,220,255,.35),transparent 55%),linear-gradient(118deg,transparent 30%,rgba(255,255,255,.2) 38%,transparent 46%)}
+[data-theme=light]{--ink:#F2F6FF;--muted:#C9D6F5}
+[data-theme=light] body{background:#2a3566!important}
+[data-theme=light] body::before{background:radial-gradient(700px 520px at 8% 4%,rgba(110,120,230,.75),transparent 65%),radial-gradient(640px 500px at 96% 8%,rgba(40,150,210,.65),transparent 65%),radial-gradient(620px 460px at 86% 94%,rgba(30,150,150,.55),transparent 65%),radial-gradient(560px 440px at 6% 96%,rgba(130,90,200,.5),transparent 65%),linear-gradient(180deg,#34407a,#1d2650)!important}
+[data-theme=light] body::after{opacity:.12}
+/* text sitting directly on the darker page stays light */
+[data-theme=light] .lp-copy h1,[data-theme=light] .lp-copy .lead,[data-theme=light] .lp-copy,[data-theme=light] main>h1,[data-theme=light] main>h2,[data-theme=light] main>p,[data-theme=light] .sec-t,[data-theme=light] .eyebrow,[data-theme=light] .lp-note{color:#F2F6FF}
+[data-theme=light] .lp-copy h1 em,[data-theme=light] .hero h2 em{background:linear-gradient(90deg,#9db8ff,#7fe4ff 75%);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* cube cards: rounded, translucent, refracting */
+[data-theme=light] .glass,[data-theme=light] .card,[data-theme=light] .vcard,[data-theme=light] .auth.card,[data-theme=light] .hero,[data-theme=light] .step,[data-theme=light] .role,[data-theme=light] .stats{
+border-radius:30px;color:#F2F6FF;
+background:var(--lq),linear-gradient(145deg,rgba(170,205,255,.26),rgba(90,130,220,.16) 50%,rgba(150,225,255,.2));
+backdrop-filter:blur(22px) saturate(190%) contrast(1.04);-webkit-backdrop-filter:blur(22px) saturate(190%) contrast(1.04);
+border:1px solid rgba(215,238,255,.55);
+box-shadow:0 18px 44px rgba(8,14,50,.5),0 0 28px rgba(110,190,255,.14),inset 0 2px 1px rgba(255,255,255,.75),inset 2px 0 2px rgba(255,255,255,.3),inset 0 -10px 22px rgba(120,200,255,.25),inset -2px -2px 6px rgba(80,140,230,.35)}
+[data-theme=light] .card h1,[data-theme=light] .card h2,[data-theme=light] .card h3,[data-theme=light] .glass h2,[data-theme=light] .hero h2,[data-theme=light] .hero h1,[data-theme=light] .hero .who,[data-theme=light] th,[data-theme=light] td,[data-theme=light] label,[data-theme=light] .step *,[data-theme=light] .role *,[data-theme=light] .stats *{color:#F4F8FF}
+[data-theme=light] .hero p,[data-theme=light] .hero .lead,[data-theme=light] .muted,[data-theme=light] .small,[data-theme=light] .lp-copy .lead,[data-theme=light] .hero .who{color:#D3DFFA}
+[data-theme=light] .top{background:rgba(28,38,86,.6)!important;border-bottom:1px solid rgba(200,230,255,.4);backdrop-filter:blur(22px) saturate(180%)}
+[data-theme=light] .top,[data-theme=light] .top *{color:#F2F6FF}
+[data-theme=light] .brand em,[data-theme=light] .logo-t em{color:#8fd3ff}
+[data-theme=light] input,[data-theme=light] select,[data-theme=light] textarea{background:rgba(255,255,255,.14)!important;color:#F4F8FF!important;border:1px solid rgba(200,230,255,.45)!important;border-radius:16px}
+[data-theme=light] input::placeholder{color:#AFC1E8}
+[data-theme=light] .btn.outline,[data-theme=light] .ghost,[data-theme=light] .mile,[data-theme=light] .fchip,[data-theme=light] .tabs button{background:linear-gradient(145deg,rgba(255,255,255,.3),rgba(140,190,255,.18));color:#F4F8FF;border:1px solid rgba(215,238,255,.55);border-radius:999px;box-shadow:inset 0 1px 1px rgba(255,255,255,.7),0 6px 16px rgba(8,14,50,.3);backdrop-filter:blur(16px)}
+[data-theme=light] .avatar-pop.glass,[data-theme=light] .dialog.glass,[data-theme=light] .overlay .dialog{background:linear-gradient(160deg,#33427f,#1f2a58)!important;color:#F4F8FF}
+[data-theme=light] .btn:not(.outline):not(.ghost){color:#0d1740}
+/* dark: same liquid cube shape on the navy page */
+:root:not([data-theme=light]) .glass,:root:not([data-theme=light]) .card,:root:not([data-theme=light]) .vcard,:root:not([data-theme=light]) .auth.card,:root:not([data-theme=light]) .hero{
+border-radius:30px;background:var(--lq),linear-gradient(145deg,rgba(120,180,255,.16),rgba(30,50,110,.3) 55%,rgba(100,190,255,.12));
+box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px 1px rgba(210,240,255,.55),inset 0 -10px 22px rgba(90,170,255,.16),inset -2px -2px 6px rgba(70,130,230,.25)}
+[data-theme=light] .theme-toggle{background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(140,190,255,.2))!important;color:#F4F8FF!important;border:1px solid rgba(215,238,255,.6)!important;backdrop-filter:blur(14px)}
+[data-theme=light] .pill-badge{background:rgba(200,225,255,.18)!important;color:#CFE4FF!important;border:1px solid rgba(215,238,255,.5)!important}
+[data-theme=light] .wordmark em,[data-theme=light] .wordmark span,[data-theme=light] .auth-logo+*,[data-theme=light] .lp-sec h2,[data-theme=light] .lp-sec h3,[data-theme=light] .lp-sec p,[data-theme=light] .lp-sec .kicker{color:#F2F6FF}
+[data-theme=light] .wordmark em{color:#8fd3ff!important;-webkit-text-fill-color:#8fd3ff}
+[data-theme=light] .lp-sec [class*=kick],[data-theme=light] .lp-sec small{color:#9cc4ff}
