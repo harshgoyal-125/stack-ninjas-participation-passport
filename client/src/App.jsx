@@ -7,6 +7,21 @@ const TYPES = ['Hackathon', 'Workshop', 'Seminar', 'Sports', 'Cultural', 'Compet
 const STATUS = { submitted: ['Active', '⏳'], verified: ['Successful', '✓'], changes_needed: ['Failed', '!'] };
 const fmt = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
+function Mark({ size = 40 }) {
+  const id = React.useId().replace(/:/g, '');
+  return (
+    <svg className="mark" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="CampusTrace logo" focusable="false">
+      <defs><linearGradient id={'g' + id} x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#4F46E5" /><stop offset=".55" stopColor="#6366F1" /><stop offset="1" stopColor="#22D3EE" /></linearGradient></defs>
+      <rect width="64" height="64" rx="16" fill={'url(#g' + id + ')'} />
+      <path d="M32 13 55 25 32 37 9 25Z" fill="#fff" />
+      <path d="M19 31v9c0 4 6.2 7 13 7s13-3 13-7v-9l-13 6.5Z" fill="#fff" opacity=".88" />
+      <path d="M55 25v13" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" /><circle cx="55" cy="40.5" r="2.6" fill="#fff" />
+      <circle cx="47" cy="47" r="9.5" fill="#0B0F19" stroke="#22D3EE" strokeWidth="2" /><path d="m42.6 47.2 3.2 3.2 5.8-6.4" fill="none" stroke="#22D3EE" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function Logo({ size = 40, text = true }) { return <span className="logo"><Mark size={size} />{text && <span className="wordmark">Campus<b>Trace</b></span>}</span>; }
+
 function Badge({ s }) { const [t, i] = STATUS[s]; return <span className={'badge ' + s}><b aria-hidden="true">{i}</b> {t}</span>; }
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
@@ -19,10 +34,9 @@ function Auth({ onAuth, onBack }) {
   }
   return (
     <main className="center">
-      <form className="glass auth" onSubmit={go}>
-        <img className="hero3d" src="/img/logo.png" alt="CampusTrace" />
-        <h1 className="sr">CampusTrace</h1>
-        <p className="muted">One verified record of every activity you take part in.</p>
+      <form className="card auth" onSubmit={go}>
+        <div className="auth-logo"><Mark size={64} /><h1 className="wordmark big">Campus<b>Trace</b></h1></div>
+        <p className="muted">Log in to your verified participation record.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
         <label>Password<input type="password" required autoComplete="current-password" onChange={set('password')} /></label>
         <Err e={err} />
@@ -57,7 +71,7 @@ function ActivityForm({ initial, onDone, onCancel }) {
       <label>Organizer<input maxLength={120} value={f.organizer || ''} onChange={set('organizer')} /></label>
       <label>Notes (optional)<textarea maxLength={600} rows={2} value={f.description || ''} onChange={set('description')} /></label>
       <label>Certificate {initial && '(leave empty to keep current)'}<input type="file" accept="application/pdf,image/png,image/jpeg" onChange={(e) => setFile(e.target.files[0])} /></label>
-      <p className="muted small">PDF, PNG or JPG, up to 2 MB. A faculty member checks it before it counts.</p>
+      <p className="muted small">PDF, PNG or JPG, up to 2 MB. A reviewer checks it before it counts.</p>
       <Err e={err} />
       <div className="row"><button className="btn" disabled={busy}>{initial ? 'Resubmit' : 'Submit for review'}</button><button type="button" className="ghost" onClick={onCancel}>Cancel</button></div>
     </form>
@@ -66,37 +80,52 @@ function ActivityForm({ initial, onDone, onCancel }) {
 
 
 function Splash({ onDone }) {
-  useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 800 : 3800); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 700 : 3000); return () => clearTimeout(t); }, []);
   return (
-    <div className="splash" role="status" aria-label="CampusTrace loading" onClick={onDone}>
-      <div className="logoframe"><img src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" /><i className="star" aria-hidden="true" /></div>
+    <div className="intro" role="status" aria-label="CampusTrace loading" onClick={onDone}>
+      <div className="intro-in">
+        <div className="intro-tile"><Mark size={132} /><i className="shine" aria-hidden="true" /><i className="spark s1" aria-hidden="true" /><i className="spark s2" aria-hidden="true" /><i className="spark s3" aria-hidden="true" /></div>
+        <h1 className="intro-word">Campus<b>Trace</b></h1>
+        <p className="intro-tag">Learn <span aria-hidden="true">•</span> Verify <span aria-hidden="true">•</span> Grow</p>
+        <span className="intro-bar" aria-hidden="true" />
+      </div>
     </div>
   );
 }
 
 function Landing({ onLogin }) {
-  const steps = [['1', 'Submit', 'A student adds an activity and uploads the certificate as evidence.'], ['2', 'Review', 'A faculty member from the same department checks it and verifies it, or sends it back with a reason.'], ['3', 'Report', 'Reports and exports count verified activities only.']];
-  const who = [['Students', 'One personal record of every activity, with a clear status on each.'], ['Faculty', 'A review inbox with the certificate beside the record.'], ['Admin', 'Verified participation by department and type, with CSV export.']];
+  const steps = [['01', 'Submit', 'A student adds an activity and uploads the certificate as proof.', 'Active', 'submitted'], ['02', 'Review', 'The batch counsellor checks it, then verifies it or sends it back with a reason.', 'Under review', 'submitted'], ['03', 'Report', 'Reports and CSV exports count verified activities only.', 'Successful', 'verified']];
+  const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Counsellors', 'Review the students in your batch, section and group, with their certificates beside each record.'], ['HODs', 'See department-wide verified participation, a per-counsellor breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
   return (
-    <div className="shell landing">
-      <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
-        <div className="navlinks"><button className="btn small" onClick={onLogin}>Login</button></div></header>
-      <main className="wrap">
-        <section className="glass hero">
-          <div><p className="eyebrow">Student participation platform</p>
-            <h2>Every activity.<em>One verified record.</em></h2>
-            <p className="lead">An uploaded certificate is evidence, not a verified record. CampusTrace collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
-            <div className="row"><button className="btn" onClick={onLogin}>Login</button></div></div>
-          <img className="art logo" src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" />
+    <div className="landing">
+      <header className="top"><Logo size={36} /><div className="navlinks"><button className="btn outline small" onClick={onLogin}>Login</button></div></header>
+      <main className="lp">
+        <section className="lp-hero">
+          <div className="lp-copy">
+            <span className="pill-badge">Student participation platform</span>
+            <h1>Every activity.<em>One verified record.</em></h1>
+            <p className="lead">An uploaded certificate is evidence, not a verified record. CampusTrace gets every activity checked by your college before it counts.</p>
+            <div className="row"><button className="btn big" onClick={onLogin}>Get started</button><a className="ghost big" href="#how">See how it works</a></div>
+            <p className="muted small">Accounts are created by your college administrator.</p>
+          </div>
+          <div className="lp-visual" aria-hidden="true">
+            <div className="orb" />
+            <div className="vcard"><Mark size={96} /><div className="vword">Campus<b>Trace</b></div><div className="vtag">Learn • Verify • Grow</div></div>
+            <span className="fchip c1"><i /> Successful</span><span className="fchip c2"><i /> Active</span><span className="fchip c3"><i /> Failed</span>
+          </div>
         </section>
-        <h2 className="sec">How it works</h2>
-        <div className="grid">{steps.map(([n, t, d]) => <article key={n} className="glass card acard"><span className="num">{n}</span><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
-        <h2 className="sec">Who it is for</h2>
-        <div className="grid">{who.map(([t, d]) => <article key={t} className="glass card acard"><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
-        <section className="glass stats" aria-label="Status words">
-          <div className="v"><b>✓</b><span>Verified</span></div><div className="r"><b>⏳</b><span>In review</span></div><div className="c"><b>!</b><span>Changes needed</span></div>
-        </section>
-        <section className="glass banner"><div><h2>Ready to build your record?</h2><p className="muted">Accounts are created by your college administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
+        <section id="how" className="lp-sec"><p className="eyebrow">How it works</p><h2>From certificate to verified record in three steps</h2>
+          <div className="grid3">{steps.map(([n, t, d, c, k]) => <article key={n} className="card step"><span className="stepno">{n}</span><h3>{t}</h3><p className="muted">{d}</p><span className={'badge ' + k}>{c}</span></article>)}</div></section>
+        <section className="lp-sec"><p className="eyebrow">Who it is for</p><h2>One platform, four roles</h2>
+          <div className="grid4">{who.map(([t, d]) => <article key={t} className="card role"><h3>{t}</h3><p className="muted">{d}</p></article>)}</div></section>
+        <section className="lp-sec"><p className="eyebrow">Status words</p><h2>Every record is always in one of three states</h2>
+          <div className="grid3">
+            <div className="card state ok"><b>Successful</b><span>Verified by a counsellor. Counted in reports.</span></div>
+            <div className="card state mid"><b>Active</b><span>Submitted and waiting for review. Not counted yet.</span></div>
+            <div className="card state bad"><b>Failed</b><span>Sent back with a reason. Update the proof and resubmit.</span></div>
+          </div></section>
+        <section className="card cta"><div><h2>Ready to see your record?</h2><p className="muted">Log in with the account your administrator created.</p></div><button className="btn big" onClick={onLogin}>Login</button></section>
+        <footer className="foot">CampusTrace · Team Stack Ninjas · IEEE IGNITE SKIT021</footer>
       </main>
     </div>
   );
@@ -115,13 +144,13 @@ function Student({ user }) {
     <>
       <section className="glass hero">
         <div>
-          <p className="eyebrow">Your campus story</p>
+          <p className="eyebrow">Your participation record</p>
           <p className="who">{user.name} · {user.department} · Year {user.year}</p>
-          <h2>Every activity.<em>One beautiful journey.</em></h2>
-          <p className="lead">Collect evidence. Track reviews. Keep your story.</p>
-          <div className="row"><button className="btn" onClick={() => setForm('new')}>+ Add participation</button><button className="ghost" onClick={() => setTab('report')}>View my record</button></div>
+          <h2>Hello, {user.name.split(" ")[0]}.<em>Your record, verified.</em></h2>
+          <p className="lead">Add activities with certificates, follow their review status, and share only what is verified.</p>
+          <div className="row"><button className="btn" onClick={() => setForm('new')}>+ Add participation</button><button className="ghost" onClick={() => setTab('report')}>Verified record</button></div>
         </div>
-        <img className="art" src="/img/logo.png" alt="" aria-hidden="true" />
+        <div className="art" aria-hidden="true"><Mark size={120} /></div>
       </section>
       <section className="glass stats" aria-label="Your activity counts">
         <div className="v"><b>{rep ? rep.verifiedCount : '–'}</b><span>✓ Successful</span></div>
@@ -138,7 +167,7 @@ function Student({ user }) {
           <h3>{a.title}</h3>
           <p className="muted">{a.type} · {fmt(a.date)}{a.organizer && ' · ' + a.organizer}</p>
           <Badge s={a.status} />
-          {a.status === 'changes_needed' && <p className="note"><b>Faculty note:</b> {a.reviewNote}</p>}
+          {a.status === 'changes_needed' && <p className="note"><b>Reviewer note:</b> {a.reviewNote}</p>}
           <div className="row">
             <button className="ghost" onClick={() => openBlob(`/activities/${a.id}/certificate`)}>View certificate</button>
             {a.status === 'changes_needed' && <button className="btn small" onClick={() => setForm(a)}>Update evidence</button>}
@@ -146,11 +175,11 @@ function Student({ user }) {
         </article>))}</div>)}
       {tab === 'report' && rep && (
         <section className="glass card">
-          <h3>Semester report (verified only)</h3>
+          <h3>Verified record</h3>
           {rep.activities.length === 0 ? <p className="muted">Nothing verified yet.</p> : <table><thead><tr><th>Activity</th><th>Type</th><th>Date</th></tr></thead><tbody>{rep.activities.map((a) => <tr key={a.id}><td>{a.title}</td><td>{a.type}</td><td>{fmt(a.date)}</td></tr>)}</tbody></table>}
-          <button className="ghost" onClick={() => window.print()}>Print / save as PDF</button>
+          <button className="ghost" onClick={() => window.print()}>Print or save as PDF</button>
         </section>)}
-      <section className="glass banner"><div><h2>Your semester, ready to share.</h2><p className="muted">Build a report from verified activities.</p></div><button className="btn" onClick={() => { setTab('report'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Preview report</button></section>
+      <section className="glass banner"><div><h2>Your verified record</h2><p className="muted">See and print everything that has been verified.</p></div><button className="btn" onClick={() => { setTab('report'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>View verified record</button></section>
     </>
   );
 }
@@ -429,7 +458,7 @@ function PublicView({ token }) {
   const [d, setD] = useState(null); const [err, setErr] = useState('');
   useEffect(() => { document.title = 'CampusTrace'; fetch('/api/public/' + encodeURIComponent(token)).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'This link is not available'); setD(j); }).catch((x) => setErr(x.message)); }, [token]);
   return (
-    <div className="shell"><header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div></header>
+    <div className="shell"><header className="top"><Logo size={34} /></header>
       <main className="wrap">
         {err && <section className="glass banner"><div><h2>{err}</h2><p className="muted">The owner may have stopped sharing it.</p></div></section>}
         {!d && !err && <p className="muted">Loading…</p>}
@@ -453,7 +482,7 @@ function Main() {
   const staff = user.role !== 'student';
   return (
     <div className="shell">
-      <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
+      <header className="top"><Logo size={34} />
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
           {staff && <>{['faculty', 'counsellor'].includes(user.role) && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <Avatar user={user} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
