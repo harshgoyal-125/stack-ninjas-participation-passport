@@ -32,6 +32,11 @@ function PwInput(props) {
     </span>
   );
 }
+function ThemeToggle() {
+  const [t, setT] = useState(document.documentElement.dataset.theme || 'light');
+  function flip() { const n = t === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = n; try { localStorage.setItem('pp_theme', n); } catch (e) { /* private mode */ } setT(n); }
+  return <button type="button" className="theme-toggle" onClick={flip} aria-pressed={t === 'dark'} aria-label={t === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}>{t === 'light' ? '☾ Dark' : '☀ Light'}</button>;
+}
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
 function Auth({ onAuth, onBack }) {
@@ -41,7 +46,7 @@ function Auth({ onAuth, onBack }) {
   useEffect(() => { api('/auth/config').then((c) => { setSite(c.turnstileSiteKey || ''); setMail(!!c.resetEmail); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!site) return;
-    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
     if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
   }, [site]);
   async function go(e) {
@@ -50,7 +55,14 @@ function Auth({ onAuth, onBack }) {
   }
   if (forgot) return <Forgot mail={mail} onBack={() => setForgot(false)} />;
   return (
-    <main className="center">
+    <main className="center split">
+      <aside className="auth-art" aria-hidden="true">
+        <div className="hex"><Mark size={92} /></div>
+        <div className="mile m1"><b>Active</b><span>Waiting for your counsellor</span><i><u style={{ width: '45%' }} /></i></div>
+        <div className="mile m2"><b>Successful</b><span>Checked and verified</span><i><u style={{ width: '90%' }} /></i></div>
+        <h2>Every activity.<br />One verified record.</h2>
+        <p>A certificate becomes part of your record only after your college checks it.</p>
+      </aside>
       <form className="card auth" onSubmit={go}>
         <div className="auth-logo"><Mark size={64} /><h1 className="wordmark big">Campus<b>Trace</b></h1></div>
         <p className="muted">Log in to your verified participation record.</p>
@@ -581,4 +593,4 @@ function Main() {
   );
 }
 
-export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); const r = location.pathname.match(/^\/reset\/([a-f0-9]{64})\/?$/); return r ? <ResetPage token={r[1]} /> : m ? <PublicView token={m[1]} /> : <Main />; }
+export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); const r = location.pathname.match(/^\/reset\/([a-f0-9]{64})\/?$/); return <>{r ? <ResetPage token={r[1]} /> : m ? <PublicView token={m[1]} /> : <Main />}<ThemeToggle /></>; }
