@@ -27,7 +27,3 @@ Use `render.yaml`. Set `MONGODB_URI`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`; `JWT_SECR
 Tested: no role escalation at sign-up, NoSQL operator injection rejected, token required, student cannot read another student's record/certificate, student cannot call review/admin/report endpoints, faculty cannot review another department, upload type sniffed from file bytes and 2 MB limit, CSV formula cells neutralised, reports verified-only.
 Implemented, not automatically tested: helmet headers/CSP, rate limiting, bcrypt hashing, JWT expiry (8h).
 Not done: HTTPS is provided by the host; no email verification, no password reset, no audit log.
-
-## Image credits
-
-The background photo (`client/public/img/skit-campus.jpg`) is the Sir M. Visvesvaraya Block photo from the official SKIT Jaipur site: https://www.skit.ac.in/images/SKIT/SIR_M_VISVESVARAYA_BLOCK.JPG (page: https://www.skit.ac.in/admissions/infrastructure.html). Copyright belongs to Swami Keshvanand Institute of Technology, Management & Gramothan. It is used here for a college hackathon prototype and shown with a dusk colour overlay applied in CSS. The CampusTrace logo was supplied by the team.
