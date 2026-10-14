@@ -206,6 +206,21 @@ describe('first login, CSV import, counsellor scope', () => {
     expect((await request(app).get('/api/activities').set('Authorization', 'Bearer ' + ho)).body.activities.length).toBe(2);
     const st = await request(app).get('/api/reports/students').set('Authorization', 'Bearer ' + c);
     expect(st.body.students.map((x) => x.name)).toEqual(['s1@a.com']);
+    const H = (t) => ({ Authorization: 'Bearer ' + t });
+    const an = await request(app).get('/api/reports/analytics').set(H(c));
+    expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.byEvent[0].key).toBe('One'); expect(an.body.byCounsellor).toBeUndefined();
+    const anH = await request(app).get('/api/reports/analytics').set(H(ho));
+    expect(anH.body.students).toBe(2); expect(anH.body.byCounsellor.length).toBe(1); expect(anH.body.byCounsellor[0].students).toBe(1); expect(anH.body.byCounsellor[0].verified).toBe(1);
+    expect((await request(app).get('/api/reports/analytics?year=3').set(H(ho))).body.students).toBe(0);
+    const sl = await request(app).get('/api/reports/student-list?q=s1').set(H(c));
+    expect(sl.body.students.length).toBe(1); expect(sl.body.students[0].verified).toBe(1); expect(JSON.stringify(sl.body)).not.toMatch(/passwordHash/);
+    expect((await request(app).get('/api/reports/student-list?q=' + encodeURIComponent('.*')).set(H(ho))).body.students.length).toBe(0);
+    const other = (await User.findOne({ email: 's2@a.com' }))._id, mine = (await User.findOne({ email: 's1@a.com' }))._id;
+    expect((await request(app).get('/api/reports/student/' + other).set(H(c))).status).toBe(404);
+    expect((await request(app).get('/api/reports/student/' + mine).set(H(c))).body.activities.length).toBe(1);
+    expect((await request(app).get('/api/reports/student/' + other).set(H(ho))).status).toBe(200);
+    expect((await request(app).get('/api/reports/analytics').set(H(s1))).status).toBe(403);
+    expect((await request(app).get('/api/reports/student-list').set(H(s1))).status).toBe(403);
   });
 });
 

@@ -12,4 +12,11 @@ async function activityScope(user) {
   }
   return {};
 }
-module.exports = { activityScope };
+// Students a staff user may see (same rules as activityScope).
+async function studentQuery(user) {
+  if (user.role === 'admin') return { role: 'student' };
+  const q = { role: 'student', department: user.department };
+  if (user.role === 'counsellor') for (const k of ['batch', 'section', 'group']) if (user[k]) q[k] = user[k];
+  return q;
+}
+module.exports = { activityScope, studentQuery };

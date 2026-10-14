@@ -184,21 +184,68 @@ function Review({ user }) {
   );
 }
 
+function Bars({ title, rows, empty }) {
+  const max = Math.max(1, ...rows.map((x) => x.count));
+  return (
+    <section className="glass card chart"><h3>{title}</h3>
+      {rows.length === 0 && <p className="muted">{empty || 'No verified records yet.'}</p>}
+      {rows.map((x) => <div key={x.key} className="bar"><span title={x.key}>{x.key}</span><i style={{ width: (x.count / max) * 100 + '%' }} /><b>{x.count}</b></div>)}
+    </section>
+  );
+}
+function MonthChart({ rows }) {
+  const max = Math.max(1, ...rows.map((x) => x.count));
+  const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return (
+    <section className="glass card chart"><h3>By month</h3>
+      {rows.length === 0 ? <p className="muted">No verified records yet.</p> :
+        <div className="cols" role="img" aria-label={'Verified activities per month: ' + rows.map((x) => x.key + ' ' + x.count).join(', ')}>
+          {rows.map((x) => <div key={x.key} className="col"><b>{x.count}</b><i style={{ height: (x.count / max) * 100 + '%' }} /><span>{MN[+x.key.slice(5) - 1]} {x.key.slice(2, 4)}</span></div>)}
+        </div>}
+    </section>
+  );
+}
+function StudentDetail({ id, onBack }) {
+  const [d, setD] = useState(null); const [err, setErr] = useState('');
+  useEffect(() => { api('/reports/student/' + id).then(setD).catch((e) => setErr(e.message)); }, [id]);
+  if (!d) return <><button className="link" onClick={onBack}>Back to list</button><Err e={err} /></>;
+  const s = d.student;
+  return (
+    <>
+      <button className="link" onClick={onBack}>Back to list</button>
+      <section className="glass card"><h3>{s.name}</h3>
+        <p className="muted">{s.email} · {s.department}{s.year ? ' · Year ' + s.year : ''}{s.semester ? ' · Sem ' + s.semester : ''}{s.rollNo ? ' · Roll ' + s.rollNo : ''}{s.batch ? ' · Batch ' + s.batch : ''}{s.section ? ' · Sec ' + s.section : ''}{s.group ? ' · Grp ' + s.group : ''}</p>
+        {d.activities.length === 0 && <p className="muted">No activities yet.</p>}
+        {d.activities.map((a) => <div key={a.id} className="srow"><div><b>{a.title}</b><p className="muted">{a.type} · {new Date(a.date).toLocaleDateString()}{a.organizer ? ' · ' + a.organizer : ''}</p>{a.reviewNote && <p className="muted">Note: {a.reviewNote}</p>}</div><Badge s={a.status} /></div>)}
+      </section>
+    </>
+  );
+}
 function Reports({ user }) {
-  const [s, setS] = useState(null); const [st, setSt] = useState([]); const [err, setErr] = useState('');
-  useEffect(() => { Promise.all([api('/reports/summary'), api('/reports/students')]).then(([a, b]) => { setS(a); setSt(b.students); }).catch((e) => setErr(e.message)); }, []);
-  if (!s) return <Err e={err} />;
-  const max = Math.max(1, ...s.verifiedByDepartment.map((x) => x.count));
+  const [an, setAn] = useState(null); const [st, setSt] = useState([]); const [err, setErr] = useState('');
+  const [year, setYear] = useState(''); const [sem, setSem] = useState(''); const [q, setQ] = useState(''); const [open, setOpen] = useState(null);
+  const qs = (extra) => '?' + new URLSearchParams({ ...(year && { year }), ...(sem && { semester: sem }), ...extra }).toString();
+  useEffect(() => { setErr(''); Promise.all([api('/reports/analytics' + qs({})), api('/reports/student-list' + qs(q ? { q } : {}))]).then(([a, b]) => { setAn(a); setSt(b.students); }).catch((e) => setErr(e.message)); }, [year, sem, q]);
+  if (open) return <StudentDetail id={open} onBack={() => setOpen(null)} />;
+  if (!an) return <Err e={err} />;
+  const t = an.totals;
   return (
     <>
       <h2>Verified participation report</h2>
-      <p className="muted">Counts include verified records only. {s.pendingReview} waiting for review are not included.</p>
-      <section className="glass card"><h3>By department</h3>
-        {s.verifiedByDepartment.length === 0 && <p className="muted">No verified records yet.</p>}
-        {s.verifiedByDepartment.map((x) => <div key={x.department} className="bar"><span>{x.department}</span><i style={{ width: (x.count / max) * 100 + '%' }} /><b>{x.count}</b></div>)}
-      </section>
-      <section className="glass card"><h3>By type</h3>{s.verifiedByType.map((x) => <p key={x.type}>{x.type}: <b>{x.count}</b></p>)}</section>
-      <section className="glass card"><h3>Top students (verified)</h3>{st.map((x, i) => <p key={i}>{x.name} · {x.department} Y{x.year}: <b>{x.verifiedCount}</b></p>)}</section>
+      <p className="muted">Charts count verified records only. {t.inReview} in review and {t.changesNeeded} needing changes are not included.</p>
+      <div className="glass filters">
+        <label>Year<select value={year} onChange={(e) => setYear(e.target.value)}><option value="">All</option>{[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
+        <label>Semester<select value={sem} onChange={(e) => setSem(e.target.value)}><option value="">All</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
+        <label className="grow">Find student<input value={q} placeholder="Name, email or roll number" onChange={(e) => setQ(e.target.value)} /></label>
+      </div>
+      <div className="kpis"><div className="glass kpi"><b>{an.students}</b><span>Students</span></div><div className="glass kpi"><b>{t.verified}</b><span>Verified</span></div><div className="glass kpi"><b>{t.inReview}</b><span>In review</span></div><div className="glass kpi"><b>{t.changesNeeded}</b><span>Changes needed</span></div></div>
+      <div className="charts"><Bars title="By year" rows={an.byYear} /><Bars title="By type" rows={an.byType} /><MonthChart rows={an.byMonth} /><Bars title="By event name (top 10)" rows={an.byEvent} /></div>
+      {an.byCounsellor && <section className="glass card"><h3>By counsellor</h3>
+        {an.byCounsellor.length === 0 && <p className="muted">No counsellors yet.</p>}
+        <div className="tbl">{an.byCounsellor.map((c) => <div key={c.email} className="srow"><div><b>{c.name}</b><p className="muted">{c.department}{c.batch ? ' · Batch ' + c.batch : ''}{c.section ? ' · Sec ' + c.section : ''}{c.group ? ' · Grp ' + c.group : ''}</p></div><span><b>{c.verified}</b> verified · {c.students} students</span></div>)}</div></section>}
+      <section className="glass card"><h3>Students ({st.length})</h3>
+        {st.length === 0 && <p className="muted">No students match.</p>}
+        <div className="tbl">{st.map((x) => <button key={x.id} className="srow rowbtn" onClick={() => setOpen(x.id)}><div><b>{x.name}</b><p className="muted">{x.department}{x.year ? ' · Y' + x.year : ''}{x.semester ? ' · S' + x.semester : ''}{x.rollNo ? ' · ' + x.rollNo : ''}</p></div><span><b>{x.verified}</b> verified · {x.inReview} review · {x.changesNeeded} changes</span></button>)}</div></section>
       <button className="btn" onClick={() => openBlob('/reports/export.csv', 'verified-participation.csv')}>Download CSV (opens in Excel)</button>
       {user.role === 'admin' && <AdminUsers />}
     </>
