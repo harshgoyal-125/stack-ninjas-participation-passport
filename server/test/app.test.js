@@ -91,3 +91,64 @@ test('only admin can create faculty', async () => {
   const r = await request(app).post('/api/admin/users').set('Authorization', 'Bearer ' + admin).send({ name: 'F', email: 'ff@a.com', password: 'password123', role: 'faculty', department: 'IT' });
   expect(r.status).toBe(201);
 });
+
+describe('admin user management', () => {
+  const adm = async (email = 'ad@a.com') => mk('admin', email, 'CSE');
+  const post = (t, body) => request(app).post('/api/admin/users').set('Authorization', 'Bearer ' + t).send(body);
+  test('only admin can list, create or delete users', async () => {
+    const st = (await reg('s@a.com')).token, fa = await mk('faculty', 'f@a.com', 'IT'), co = await mk('counsellor', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT');
+    for (const t of [st, fa, co, ho]) {
+      expect((await request(app).get('/api/admin/users').set('Authorization', 'Bearer ' + t)).status).toBe(403);
+      expect((await post(t, { name: 'x', email: 'x@a.com', password: 'password123', role: 'admin', department: 'IT' })).status).toBe(403);
+      expect((await request(app).delete('/api/admin/users/' + 'a'.repeat(24)).set('Authorization', 'Bearer ' + t)).status).toBe(403);
+    }
+    expect((await request(app).get('/api/admin/users')).status).toBe(401);
+  });
+  test('admin creates every role, hashed password, no password in response or list', async () => {
+    const t = await adm();
+    const mkU = (role, extra = {}) => post(t, { name: role, email: role + '@d.com', password: 'Str0ng-pass-1', role, department: 'IT', demo: true, ...extra });
+    expect((await mkU('student', { year: 2, rollNo: '21IT01', group: 'G1' })).status).toBe(201);
+    expect((await mkU('counsellor', { batch: '2022', section: 'A', group: 'G1' })).status).toBe(201);
+    expect((await mkU('hod')).status).toBe(201);
+    expect((await mkU('student', { email: 'bad@d.com', year: 9 })).status).toBe(400);
+    expect((await mkU('student', { year: 2 })).status).toBe(409);
+    expect((await post(t, { name: 'x', email: 'q@d.com', password: 'short', role: 'hod', department: 'IT' })).status).toBe(400);
+    expect((await post(t, { name: 'x', email: 'q@d.com', password: 'password123', role: 'superuser', department: 'IT' })).status).toBe(400);
+    const raw = await User.findOne({ email: 'student@d.com' });
+    expect(raw.passwordHash).not.toContain('Str0ng'); expect(raw.passwordHash.startsWith('$2')).toBe(true);
+    const list = await request(app).get('/api/admin/users').set('Authorization', 'Bearer ' + t);
+    expect(list.status).toBe(200); expect(list.body.users.length).toBe(4);
+    expect(JSON.stringify(list.body)).not.toMatch(/passwordHash|\$2[aby]\$|Str0ng/);
+    expect(list.body.users.find((u) => u.role === 'student').rollNo).toBe('21IT01');
+    const login = await request(app).post('/api/auth/login').send({ email: 'hod@d.com', password: 'Str0ng-pass-1' });
+    expect(login.body.user.role).toBe('hod');
+  });
+  test('delete: not self, not last admin, student data removed, other users untouched', async () => {
+    const t = await adm('ad@a.com');
+    const me = await User.findOne({ email: 'ad@a.com' });
+    expect((await request(app).delete('/api/admin/users/' + me._id).set('Authorization', 'Bearer ' + t)).status).toBe(400);
+    const st = await reg('s@a.com'); await submit(st.token);
+    const other = await reg('o@a.com'); await submit(other.token);
+    expect(await Activity.countDocuments()).toBe(2);
+    const del = await request(app).delete('/api/admin/users/' + st.user.id).set('Authorization', 'Bearer ' + t);
+    expect(del.status).toBe(200); expect(del.body.activitiesRemoved).toBe(1);
+    expect(await User.findOne({ email: 's@a.com' })).toBeNull();
+    expect(await Activity.countDocuments()).toBe(1);
+    expect(await User.findOne({ email: 'o@a.com' })).not.toBeNull();
+    expect((await request(app).delete('/api/admin/users/' + st.user.id).set('Authorization', 'Bearer ' + t)).status).toBe(404);
+    expect((await request(app).delete('/api/admin/users/not-an-id').set('Authorization', 'Bearer ' + t)).status).toBe(404);
+    // last admin: a second admin deleting the first is fine, but the final one is protected
+    const t2 = await adm('ad2@a.com');
+    const second = await User.findOne({ email: 'ad2@a.com' });
+    expect((await request(app).delete('/api/admin/users/' + me._id).set('Authorization', 'Bearer ' + t2)).status).toBe(200);
+    expect((await request(app).delete('/api/admin/users/' + second._id).set('Authorization', 'Bearer ' + t2)).status).toBe(400);
+  });
+  test('counsellor reviews own department; hod can read reports but not review', async () => {
+    const st = await reg('s@a.com', 'IT'); const id = (await submit(st.token)).body.activity.id;
+    const co = await mk('counsellor', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT'), coOther = await mk('counsellor', 'c2@a.com', 'ECE');
+    expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + coOther).send({ decision: 'verify' })).status).toBe(404);
+    expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + ho).send({ decision: 'verify' })).status).toBe(403);
+    expect((await request(app).get('/api/reports/summary').set('Authorization', 'Bearer ' + ho)).status).toBe(200);
+    expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + co).send({ decision: 'verify' })).status).toBe(200);
+  });
+});

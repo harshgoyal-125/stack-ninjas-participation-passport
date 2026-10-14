@@ -210,20 +210,50 @@ function Reports({ user }) {
 }
 
 function AdminUsers() {
-  const [f, setF] = useState({ role: 'faculty', department: 'IT' }); const [msg, setMsg] = useState(''); const [err, setErr] = useState('');
+  const blank = { role: 'student', department: 'IT', year: 1 };
+  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [del, setDel] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + r.user.role + ': ' + r.user.email); } catch (x) { setErr(x.message); } }
+  const load = () => api('/admin/users').then((r) => setUsers(r.users)).catch((x) => setErr(x.message));
+  useEffect(() => { load(); }, []);
+  async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + r.user.role + ': ' + r.user.email); setF(blank); e.target.reset(); load(); } catch (x) { setErr(x.message); } }
+  async function remove() { const u = del; setDel(null); setErr(''); setMsg(''); try { const r = await api('/admin/users/' + u.id, { method: 'DELETE' }); setMsg('Deleted ' + u.email + (r.activitiesRemoved ? ' and ' + r.activitiesRemoved + ' record(s)' : '')); load(); } catch (x) { setErr(x.message); } }
+  const stu = f.role === 'student', cou = f.role === 'counsellor';
   return (
-    <form className="glass form" onSubmit={go}>
-      <h3>Create faculty account</h3>
-      <label>Name<input required onChange={set('name')} /></label>
-      <label>Email<input type="email" required onChange={set('email')} /></label>
-      <label>Temporary password (8+)<input type="password" minLength={8} required onChange={set('password')} /></label>
-      <div className="row"><label>Role<select value={f.role} onChange={set('role')}><option>faculty</option><option>admin</option></select></label>
-        <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
-      <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
-      <button className="btn">Create</button>
-    </form>
+    <>
+      <form className="glass form" onSubmit={go}>
+        <h3>Create account</h3>
+        <label>Name<input required onChange={set('name')} /></label>
+        <label>Email<input type="email" required onChange={set('email')} /></label>
+        <label>Temporary password (8+)<input type="password" minLength={8} required onChange={set('password')} /></label>
+        <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'counsellor', 'hod', 'faculty', 'admin'].map((r) => <option key={r}>{r}</option>)}</select></label>
+          <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
+        {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
+        {(stu || cou) && <div className="row"><label>Batch<input onChange={set('batch')} /></label><label>Section<input onChange={set('section')} /></label><label>Group<input onChange={set('group')} /></label></div>}
+        <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
+        <button className="btn">Create</button>
+      </form>
+      <section className="glass card"><h3>All users ({users.length})</h3>
+        <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
+          {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{u.role}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
+            <td className="small">{[u.year && 'Y' + u.year, u.semester && 'Sem ' + u.semester, u.rollNo, u.batch, u.section, u.group].filter(Boolean).join(' · ')}</td>
+            <td><button className="ghost" onClick={() => setDel(u)} aria-label={'Delete ' + u.email}>Delete</button></td></tr>)}
+        </tbody></table></div>
+      </section>
+      {del && <ConfirmDelete u={del} onCancel={() => setDel(null)} onConfirm={remove} />}
+    </>
+  );
+}
+
+function ConfirmDelete({ u, onCancel, onConfirm }) {
+  useEffect(() => { const k = (e) => e.key === 'Escape' && onCancel(); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); });
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="del-t" onClick={(e) => e.stopPropagation()}>
+        <h2 id="del-t">Delete this user?</h2>
+        <p className="muted">{u.name} ({u.email}, {u.role}) will be removed.{u.role === 'student' ? ' Their activities and certificates will also be deleted.' : ''} This cannot be undone.</p>
+        <div className="row"><button className="ghost" autoFocus onClick={onCancel}>Cancel</button><button className="btn" onClick={onConfirm}>Delete</button></div>
+      </div>
+    </div>
   );
 }
 
@@ -256,13 +286,13 @@ export default function App() {
     <div className="shell">
       <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
-          {staff && <>{user.role === 'faculty' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || user.role === 'admin' ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
+          {staff && <>{['faculty', 'counsellor'].includes(user.role) && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <span className="pill" title={user.email}>{user.name} · {user.role}</span>
           <button className="link" onClick={() => setAskOut(true)}>Log out</button></div></header>
       <main className="wrap" key={view}>
         {user.role === 'student' && <Student user={user} />}
-        {user.role === 'faculty' && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
-        {user.role === 'admin' && <Reports user={user} />}
+        {['faculty', 'counsellor'].includes(user.role) && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
+        {['admin', 'hod'].includes(user.role) && <Reports user={user} />}
       </main>
       {askOut && <ConfirmLogout onCancel={() => setAskOut(false)} onConfirm={() => { setAskOut(false); setToken(''); setUser(null); setView('main'); }} />}
     </div>

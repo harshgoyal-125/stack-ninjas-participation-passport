@@ -38,7 +38,7 @@ const up = (req, res, next) => upload.single('certificate')(req, res, next);
 // Scope: student -> own; faculty -> own department; admin -> all.
 function scopeFilter(user) {
   if (user.role === 'student') return { student: user._id };
-  if (user.role === 'faculty') return { department: user.department };
+  if (['faculty', 'counsellor', 'hod'].includes(user.role)) return { department: user.department };
   return {};
 }
 async function loadScoped(req, res, select) {
@@ -86,7 +86,7 @@ router.get('/:id/certificate', async (req, res, next) => {
 });
 
 // Faculty decision. Only faculty of the same department (enforced by scopeFilter).
-router.post('/:id/review', requireRole('faculty'), async (req, res, next) => {
+router.post('/:id/review', requireRole('faculty', 'counsellor'), async (req, res, next) => {
   try {
     const a = await loadScoped(req, res); if (!a) return;
     const decision = str(req.body.decision), note = str(req.body.note).slice(0, 400);
