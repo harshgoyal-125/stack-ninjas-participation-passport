@@ -35,3 +35,4 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:6px;bord
 .bar{display:grid;grid-template-columns:50px 1fr 30px;gap:8px;align-items:center}.bar i{display:block;height:14px;border-radius:8px;background:linear-gradient(90deg,#7a6bff,#ff9fd2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{.top,.tabs,.btn,.ghost{display:none}body{background:#fff}}
+html,body{overflow-x:hidden}
