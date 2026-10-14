@@ -9,8 +9,8 @@ const fmt = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', mon
 function Badge({ s }) { const [t, i] = STATUS[s]; return <span className={'badge ' + s}><b aria-hidden="true">{i}</b> {t}</span>; }
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
-function Auth({ onAuth }) {
-  const [mode, setMode] = useState('login'); const [f, setF] = useState({ department: 'IT', year: 3 }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+function Auth({ onAuth, start = 'login', onBack }) {
+  const [mode, setMode] = useState(start); const [f, setF] = useState({ department: 'IT', year: 3 }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   async function go(e) {
     e.preventDefault(); setErr(''); setBusy(true);
@@ -31,6 +31,7 @@ function Auth({ onAuth }) {
         </div>}
         <Err e={err} />
         <button className="btn" disabled={busy}>{mode === 'login' ? 'Log in' : 'Create student account'}</button>
+        {onBack && <button type="button" className="link" onClick={onBack}>← Back to home</button>}
         <button type="button" className="link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr(''); }}>{mode === 'login' ? 'New student? Create an account' : 'Have an account? Log in'}</button>
         {mode === 'register' && <p className="muted small">Faculty and admin accounts are created by an administrator.</p>}
       </form>
@@ -65,6 +66,46 @@ function ActivityForm({ initial, onDone, onCancel }) {
       <Err e={err} />
       <div className="row"><button className="btn" disabled={busy}>{initial ? 'Resubmit' : 'Submit for review'}</button><button type="button" className="ghost" onClick={onCancel}>Cancel</button></div>
     </form>
+  );
+}
+
+
+function Splash({ onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 2600); return () => clearTimeout(t); }, []);
+  return (
+    <div className="splash" role="status" aria-label="Participation Passport loading" onClick={onDone}>
+      <img src="/img/hero.jpg" alt="" aria-hidden="true" />
+      <h1>Participation<br />Passport</h1>
+      <p>Evidence in. Verified record out.</p>
+    </div>
+  );
+}
+
+function Landing({ onLogin, onRegister }) {
+  const steps = [['1', 'Submit', 'A student adds an activity and uploads the certificate as evidence.'], ['2', 'Review', 'A faculty member from the same department checks it and verifies it, or sends it back with a reason.'], ['3', 'Report', 'Reports and exports count verified activities only.']];
+  const who = [['Students', 'One personal record of every activity, with a clear status on each.'], ['Faculty', 'A review inbox with the certificate beside the record.'], ['Admin', 'Verified participation by department and type, with CSV export.']];
+  return (
+    <div className="shell landing">
+      <header className="top glass"><div className="brand"><img src="/img/hero.jpg" alt="" aria-hidden="true" /><span>Participation<br />Passport</span></div>
+        <div className="navlinks"><button className="link" onClick={onRegister}>Create student account</button><button className="btn small" onClick={onLogin}>Login</button></div></header>
+      <main className="wrap">
+        <section className="glass hero">
+          <div><p className="eyebrow">Student participation platform</p>
+            <h2>Every activity.<em>One verified record.</em></h2>
+            <p className="lead">An uploaded certificate is evidence, not a verified record. Passport collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
+            <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>New student? Sign up</button></div></div>
+          <img className="art" src="/img/hero.jpg" alt="" aria-hidden="true" />
+        </section>
+        <h2 className="sec">How it works</h2>
+        <div className="grid">{steps.map(([n, t, d]) => <article key={n} className="glass card acard"><span className="num">{n}</span><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
+        <h2 className="sec">Who it is for</h2>
+        <div className="grid">{who.map(([t, d]) => <article key={t} className="glass card acard"><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
+        <section className="glass stats" aria-label="Status words">
+          <div className="v"><b>✓</b><span>Verified</span></div><div className="r"><b>⏳</b><span>In review</span></div><div className="c"><b>!</b><span>Changes needed</span></div>
+        </section>
+        <section className="glass banner"><div><h2>Ready to build your passport?</h2><p className="muted">Faculty and admin accounts are created by an administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
+      </main>
+    </div>
   );
 }
 
@@ -189,10 +230,14 @@ function AdminUsers() {
 }
 
 export default function App() {
-  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main');
+  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState('');
   useEffect(() => { if (hasToken()) api('/auth/me').then((r) => setUser(r.user)).catch(() => setToken('')).finally(() => setReady(true)); }, []);
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
-  if (!user) return <Auth onAuth={setUser} />;
+  if (!user) {
+    if (!seen) return <Splash onDone={() => { sessionStorage.setItem('pp_seen', '1'); setSeen(true); }} />;
+    if (!auth) return <Landing onLogin={() => setAuth('login')} onRegister={() => setAuth('register')} />;
+    return <Auth onAuth={setUser} start={auth} onBack={() => setAuth('')} />;
+  }
   const staff = user.role !== 'student';
   return (
     <div className="shell">

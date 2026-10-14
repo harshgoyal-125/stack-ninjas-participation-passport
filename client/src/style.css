@@ -73,3 +73,12 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;
 .acard{align-content:start}
 .acard .icon{border-radius:0;-webkit-mask-image:radial-gradient(circle,#000 52%,transparent 71%);mask-image:radial-gradient(circle,#000 52%,transparent 71%)}
 .hero .art,.auth .hero3d{-webkit-mask-image:radial-gradient(circle,#000 60%,transparent 78%);mask-image:radial-gradient(circle,#000 60%,transparent 78%)}
+.splash{position:fixed;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;text-align:center;background:radial-gradient(circle at 50% 40%,rgba(120,90,255,.35),rgba(10,8,40,.92) 70%);z-index:50;animation:splashout .6s ease 2s forwards;cursor:pointer}
+.splash img{width:200px;height:200px;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(circle,#000 60%,transparent 78%);mask-image:radial-gradient(circle,#000 60%,transparent 78%);animation:pop 1.4s cubic-bezier(.2,1.3,.4,1) both,float 4s ease-in-out 1.4s infinite}
+.splash h1{font-size:2.2rem;animation:rise .9s ease .5s both}.splash p{color:var(--muted);margin:0;animation:rise .9s ease .9s both}
+@keyframes pop{from{transform:scale(.3) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+@keyframes splashout{to{opacity:0;visibility:hidden}}
+.sec{font-size:1.5rem;margin:8px 0 0}.num{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:rgba(124,242,255,.25);box-shadow:0 0 18px rgba(124,242,255,.5)}
+.landing .acard{text-align:center}
+@media (prefers-reduced-motion:reduce){.splash{animation:none}}
