@@ -246,3 +246,10 @@ describe('public sharing', () => {
     expect((await auth(co, request(app).post('/api/shares')).send({ scope: 'profile' })).status).toBe(403);
   });
 });
+
+test('login locks after 5 wrong attempts, even with the right password', async () => {
+  await User.create({ name: 'L', email: 'lock@a.com', passwordHash: await bcrypt.hash('password123', 4), role: 'student', department: 'IT', year: 2 });
+  for (let i = 0; i < 5; i++) expect((await request(app).post('/api/auth/login').send({ email: 'lock@a.com', password: 'bad' + i })).status).toBe(401);
+  const r = await request(app).post('/api/auth/login').send({ email: 'lock@a.com', password: 'password123' });
+  expect(r.status).toBe(429);
+});

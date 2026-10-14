@@ -5,12 +5,17 @@ const { sign, requireAuth } = require('../middleware');
 const str = (v) => (typeof v === 'string' ? v : '');
 const pub = (u) => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department, year: u.year, mustChangePassword: !!u.mustChangePassword });
 
+const fails = new Map();
+const LOCK_MS = 15 * 60 * 1000;
 router.post('/login', async (req, res, next) => {
   try {
     const email = str(req.body.email).trim().toLowerCase(), password = str(req.body.password);
+    const f = fails.get(email);
+    if (f && f.n >= 5 && Date.now() - f.t < LOCK_MS) return res.status(429).json({ error: 'Too many failed attempts. Try again in 15 minutes.' });
     const user = await User.findOne({ email });
     const ok = user && await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return res.status(401).json({ error: 'Wrong email or password' });
+    if (!ok) { const g = f && Date.now() - f.t < LOCK_MS ? f : { n: 0 }; fails.set(email, { n: g.n + 1, t: Date.now() }); return res.status(401).json({ error: 'Wrong email or password' }); }
+    fails.delete(email);
     res.json({ token: sign(user), user: pub(user) });
   } catch (e) { next(e); }
 });
