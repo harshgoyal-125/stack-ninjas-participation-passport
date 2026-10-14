@@ -315,3 +315,24 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 [data-theme=light] .auth.card{background:linear-gradient(160deg,rgba(255,255,255,.75),rgba(255,255,255,.45));backdrop-filter:blur(18px);border:1px solid #fff;box-shadow:0 24px 60px rgba(99,102,241,.22),inset 0 1px 0 #fff}
 [data-theme=light] .auth .btn{background:linear-gradient(135deg,#60A5FA,#5EEAD4);color:#0B2A55;border:1px solid rgba(255,255,255,.7)}
 [data-theme=light] .auth-art h2{color:#1B1B3A}
+/* pastel boost (light) */
+[data-theme=light]{--bg:#F4EEFF;--line:rgba(167,139,250,.22);--line2:rgba(167,139,250,.4);--muted:#555A82}
+[data-theme=light] body{background:#F6F0FF!important}
+[data-theme=light] body::before{background:radial-gradient(620px 460px at 6% 4%,rgba(196,181,253,.75),transparent 65%),radial-gradient(560px 440px at 96% 6%,rgba(147,210,255,.7),transparent 65%),radial-gradient(540px 420px at 88% 92%,rgba(167,243,208,.65),transparent 65%),radial-gradient(520px 400px at 8% 94%,rgba(254,205,170,.6),transparent 65%),radial-gradient(420px 320px at 50% 50%,rgba(251,207,232,.45),transparent 70%),linear-gradient(180deg,#FAF5FF,#EFF6FF)!important;animation:none}
+[data-theme=light] body::after{opacity:.18}
+[data-theme=light] .glass,[data-theme=light] .card{background:linear-gradient(150deg,rgba(255,255,255,.82),rgba(237,233,254,.6) 55%,rgba(207,250,254,.5));backdrop-filter:blur(14px)}
+[data-theme=light] .top{background:rgba(250,245,255,.75)!important;backdrop-filter:blur(14px)}
+[data-theme=light] .hero{background:linear-gradient(135deg,rgba(221,214,254,.8),rgba(186,230,253,.65) 55%,rgba(187,247,208,.6))}
+[data-theme=light] .banner,[data-theme=light] .cta{background:linear-gradient(120deg,rgba(221,214,254,.75),rgba(254,215,170,.5),rgba(186,230,253,.7))}
+[data-theme=light] .btn,[data-theme=light] .auth .btn{background:linear-gradient(135deg,#BFDBFE,#C4B5FD 55%,#A7F3D0);color:#1E1B4B;border:1px solid rgba(255,255,255,.85);box-shadow:0 8px 22px rgba(139,127,230,.35),inset 0 1px 0 #fff;font-weight:700}
+[data-theme=light] .btn:hover{box-shadow:0 12px 28px rgba(139,127,230,.5)}
+[data-theme=light] .btn.outline,[data-theme=light] .ghost{background:rgba(255,255,255,.65)}
+[data-theme=light] .bar i,[data-theme=light] .col i{background:linear-gradient(90deg,#A78BFA,#7DD3FC,#6EE7B7)}
+[data-theme=light] .col i{background:linear-gradient(180deg,#7DD3FC,#A78BFA)}
+[data-theme=light] .badge{background:rgba(221,214,254,.6)}
+[data-theme=light] .vcard,[data-theme=light] .auth.card{background:linear-gradient(150deg,rgba(255,255,255,.8),rgba(233,226,255,.55),rgba(207,250,254,.45))}
+[data-theme=light] .step:nth-child(3n+1),[data-theme=light] .role:nth-child(3n+1){background:linear-gradient(150deg,rgba(255,255,255,.85),rgba(221,214,254,.65))}
+[data-theme=light] .step:nth-child(3n+2),[data-theme=light] .role:nth-child(3n+2){background:linear-gradient(150deg,rgba(255,255,255,.85),rgba(186,230,253,.6))}
+[data-theme=light] .step:nth-child(3n),[data-theme=light] .role:nth-child(3n){background:linear-gradient(150deg,rgba(255,255,255,.85),rgba(187,247,208,.55))}
+[data-theme=light] .hex{background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(196,181,253,.6) 55%,rgba(167,243,208,.6))}
+[data-theme=light] .intro{background:radial-gradient(600px 460px at 30% 35%,rgba(196,181,253,.8),transparent 70%),radial-gradient(500px 400px at 70% 65%,rgba(147,210,255,.7),transparent 70%),radial-gradient(400px 300px at 50% 80%,rgba(254,205,170,.55),transparent 70%),#F6F0FF}
