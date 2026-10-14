@@ -227,8 +227,23 @@ function AdminUsers() {
   );
 }
 
+function ConfirmLogout({ onCancel, onConfirm }) {
+  const [closing, setClosing] = useState(null);
+  const close = (fn) => { if (closing) return; setClosing(true); setTimeout(fn, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220); };
+  useEffect(() => { const k = (e) => e.key === 'Escape' && close(onCancel); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); });
+  return (
+    <div className={'overlay' + (closing ? ' out' : '')} onClick={() => close(onCancel)}>
+      <div className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="lo-t" onClick={(e) => e.stopPropagation()}>
+        <h2 id="lo-t">Log out?</h2>
+        <p className="muted">You will need to log in again to see your activities.</p>
+        <div className="row"><button className="ghost" autoFocus onClick={() => close(onCancel)}>Stay logged in</button><button className="btn" onClick={() => close(onConfirm)}>Log out</button></div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState('');
+  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false);
   useEffect(() => { if (hasToken()) api('/auth/me').then((r) => setUser(r.user)).catch(() => setToken('')).finally(() => setReady(true)); }, []);
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
   if (!user) {
@@ -243,12 +258,13 @@ export default function App() {
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
           {staff && <>{user.role === 'faculty' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || user.role === 'admin' ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <span className="pill" title={user.email}>{user.name} · {user.role}</span>
-          <button className="link" onClick={() => { setToken(''); setUser(null); }}>Log out</button></div></header>
-      <main className="wrap">
+          <button className="link" onClick={() => setAskOut(true)}>Log out</button></div></header>
+      <main className="wrap" key={view}>
         {user.role === 'student' && <Student user={user} />}
         {user.role === 'faculty' && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
         {user.role === 'admin' && <Reports user={user} />}
       </main>
+      {askOut && <ConfirmLogout onCancel={() => setAskOut(false)} onConfirm={() => { setAskOut(false); setToken(''); setUser(null); setView('main'); }} />}
     </div>
   );
 }

@@ -94,3 +94,18 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;
 @keyframes fadeframe{to{opacity:0}}
 .hero .art.logo{-webkit-mask-image:none;mask-image:none;mix-blend-mode:normal;border-radius:28px;max-width:360px;animation:none;box-shadow:0 0 40px rgba(130,110,255,.45)}
 @media (prefers-reduced-motion:reduce){.logoframe img{opacity:1;filter:none;transform:none;animation:none}.star{display:none}.logoframe::before{display:none}}
+
+.overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(6,4,32,.6);backdrop-filter:blur(6px);animation:fadein .22s ease both}
+.overlay.out{animation:fadeout .22s ease both}
+.dialog{width:min(380px,100%);padding:24px;display:grid;gap:10px;animation:dlgin .32s cubic-bezier(.2,1.2,.4,1) both}
+.overlay.out .dialog{animation:dlgout .22s ease both}
+.dialog h2{margin:0}.dialog p{margin:0}.dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
+@keyframes fadein{from{opacity:0}}
+@keyframes fadeout{to{opacity:0}}
+@keyframes dlgin{from{opacity:0;transform:translateY(18px) scale(.92)}}
+@keyframes dlgout{to{opacity:0;transform:translateY(10px) scale(.95)}}
+@keyframes pagein{from{opacity:0;transform:translateY(14px)}}
+.wrap>*,.center>*,.landing,.shell>.top{animation:pagein .45s ease both}
+.wrap>*:nth-child(2){animation-delay:.06s}.wrap>*:nth-child(3){animation-delay:.12s}.wrap>*:nth-child(4){animation-delay:.18s}
+.tabs+*,.grid>.card{animation:pagein .4s ease both}
+@media (prefers-reduced-motion:reduce){.overlay,.dialog,.overlay.out,.overlay.out .dialog,.wrap>*,.center>*,.landing,.shell>.top,.tabs+*,.grid>.card{animation:none!important}}
