@@ -283,3 +283,50 @@ test('captcha: when Turnstile is configured, login needs a token verified by Clo
   } finally { global.fetch = real; delete process.env.TURNSTILE_SECRET; delete process.env.TURNSTILE_SITE_KEY; }
   expect((await request(app).get('/api/auth/config')).body.turnstileSiteKey).toBe('');
 });
+
+describe('password reset', () => {
+  const crypto = require('crypto');
+  const setup = async () => { await User.create({ name: 'R', email: 'r@a.com', passwordHash: await bcrypt.hash('password123', 4), role: 'student', department: 'IT', year: 2 }); };
+  test('forgot: same answer for unknown email; token stored hashed; single use; expires; email never leaks', async () => {
+    await setup();
+    process.env.BREVO_API_KEY = 'k'; process.env.MAIL_FROM = 'from@a.com';
+    const real = global.fetch; const sent = [];
+    global.fetch = async (u, o) => { sent.push(JSON.parse(o.body)); return { ok: true }; };
+    try {
+      const a = await request(app).post('/api/auth/forgot').send({ email: 'nobody@a.com' });
+      const b = await request(app).post('/api/auth/forgot').send({ email: 'r@a.com' });
+      expect(a.status).toBe(200); expect(b.status).toBe(200); expect(a.body).toEqual(b.body);
+      expect(sent.length).toBe(1); expect(sent[0].to[0].email).toBe('r@a.com');
+      const token = sent[0].textContent.match(/reset\/([a-f0-9]{64})/)[1];
+      const row = await User.findOne({ email: 'r@a.com' }).select('+resetTokenHash +resetExpires');
+      expect(row.resetTokenHash).toBe(crypto.createHash('sha256').update(token).digest('hex')); expect(row.resetTokenHash).not.toBe(token);
+      expect((await request(app).post('/api/auth/reset').send({ token, password: 'short' })).status).toBe(400);
+      expect((await request(app).post('/api/auth/reset').send({ token, password: 'brand-new-pass' })).status).toBe(200);
+      expect((await request(app).post('/api/auth/reset').send({ token, password: 'another-pass-1' })).status).toBe(400);
+      expect((await request(app).post('/api/auth/login').send({ email: 'r@a.com', password: 'brand-new-pass' })).status).toBe(200);
+      expect((await request(app).post('/api/auth/login').send({ email: 'r@a.com', password: 'password123' })).status).toBe(401);
+      await User.updateOne({ email: 'r@a.com' }, { resetTokenHash: crypto.createHash('sha256').update('f'.repeat(64)).digest('hex'), resetExpires: new Date(Date.now() - 1000) });
+      expect((await request(app).post('/api/auth/reset').send({ token: 'f'.repeat(64), password: 'brand-new-pass2' })).status).toBe(400);
+    } finally { global.fetch = real; delete process.env.BREVO_API_KEY; delete process.env.MAIL_FROM; }
+  });
+  test('forgot does nothing when mail is not configured', async () => {
+    await setup();
+    const r = await request(app).post('/api/auth/forgot').send({ email: 'r@a.com' });
+    expect(r.status).toBe(200); expect((await User.findOne({ email: 'r@a.com' }).select('+resetTokenHash')).resetTokenHash).toBeUndefined();
+    expect((await request(app).get('/api/auth/config')).body.resetEmail).toBe(false);
+  });
+  test('admin sets a temporary password and can fix student details; others cannot', async () => {
+    await setup(); const ad = await mk('admin', 'ad@a.com', 'IT'); const st = await mk('student', 'st@a.com', 'IT');
+    const id = String((await User.findOne({ email: 'r@a.com' }))._id); const H = (t) => ({ Authorization: 'Bearer ' + t });
+    expect((await request(app).post(`/api/admin/users/${id}/reset-password`).set(H(st)).send({ password: 'temp-pass-123' })).status).toBe(403);
+    expect((await request(app).post(`/api/admin/users/${id}/reset-password`).set(H(ad)).send({ password: 'short' })).status).toBe(400);
+    const ok = await request(app).post(`/api/admin/users/${id}/reset-password`).set(H(ad)).send({ password: 'temp-pass-123' });
+    expect(ok.status).toBe(200); expect(JSON.stringify(ok.body)).not.toContain('temp-pass-123');
+    const l = await request(app).post('/api/auth/login').send({ email: 'r@a.com', password: 'temp-pass-123' });
+    expect(l.status).toBe(200); expect(l.body.user.mustChangePassword).toBe(true);
+    const p = await request(app).patch('/api/admin/users/' + id).set(H(ad)).send({ batch: '2024', section: 'A', group: 'G1', semester: 4 });
+    expect(p.status).toBe(200); expect(p.body.user.batch).toBe('2024'); expect(p.body.user.group).toBe('G1');
+    expect((await request(app).patch('/api/admin/users/' + id).set(H(st)).send({ batch: 'x' })).status).toBe(403);
+    expect((await request(app).patch('/api/admin/users/' + id).set(H(ad)).send({ year: 9 })).status).toBe(400);
+  });
+});

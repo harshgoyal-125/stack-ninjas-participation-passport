@@ -28,8 +28,8 @@ function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null;
 function Auth({ onAuth, onBack }) {
   const [f, setF] = useState({}); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const [site, setSite] = useState(''); const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
-  useEffect(() => { api('/auth/config').then((c) => setSite(c.turnstileSiteKey || '')).catch(() => {}); }, []);
+  const [site, setSite] = useState(''); const [mail, setMail] = useState(false); const [forgot, setForgot] = useState(false); const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
+  useEffect(() => { api('/auth/config').then((c) => { setSite(c.turnstileSiteKey || ''); setMail(!!c.resetEmail); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!site) return;
     const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
@@ -39,6 +39,7 @@ function Auth({ onAuth, onBack }) {
     e.preventDefault(); setErr(''); setBusy(true);
     try { const r = await api('/auth/login', { method: 'POST', body: { ...f, turnstileToken: tok } }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); if (window.turnstile && wid.current !== null) { window.turnstile.reset(wid.current); setTok(''); } } finally { setBusy(false); }
   }
+  if (forgot) return <Forgot mail={mail} onBack={() => setForgot(false)} />;
   return (
     <main className="center">
       <form className="card auth" onSubmit={go}>
@@ -49,6 +50,7 @@ function Auth({ onAuth, onBack }) {
         {site && <div ref={box} className="cf" />}
         <Err e={err} />
         <button className="btn" disabled={busy || (!!site && !tok)}>Log in</button>
+        <button type="button" className="link" onClick={() => setForgot(true)}>Forgot password?</button>
         <p className="muted small" style={{ textAlign: "center" }}>Accounts are created by your college administrator.</p>
         {onBack && <button type="button" className="link" onClick={onBack}>← Back to home</button>}
       </form>
@@ -291,7 +293,7 @@ function Reports({ user }) {
 
 function AdminUsers() {
   const blank = { role: 'student', department: 'IT', year: 1 };
-  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [del, setDel] = useState(null);
+  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [del, setDel] = useState(null); const [edit, setEdit] = useState(null); const [rst, setRst] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const load = () => api('/admin/users').then((r) => setUsers(r.users)).catch((x) => setErr(x.message));
   useEffect(() => { load(); }, []);
@@ -317,11 +319,76 @@ function AdminUsers() {
         <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
           {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{u.role}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
             <td className="small">{[u.year && 'Y' + u.year, u.semester && 'Sem ' + u.semester, u.rollNo, u.batch, u.section, u.group].filter(Boolean).join(' · ')}</td>
-            <td><button className="ghost" onClick={() => setDel(u)} aria-label={'Delete ' + u.email}>Delete</button></td></tr>)}
+            <td className="actions"><button className="ghost" onClick={() => setEdit(u)} aria-label={'Edit ' + u.email}>Edit</button><button className="ghost" onClick={() => setRst(u)} aria-label={'Reset password for ' + u.email}>Reset password</button><button className="ghost" onClick={() => setDel(u)} aria-label={'Delete ' + u.email}>Delete</button></td></tr>)}
         </tbody></table></div>
       </section>
       {del && <ConfirmDelete u={del} onCancel={() => setDel(null)} onConfirm={remove} />}
+      {edit && <EditUser u={edit} onCancel={() => setEdit(null)} onDone={(m) => { setEdit(null); setMsg(m); load(); }} />}
+      {rst && <ResetPw u={rst} onCancel={() => setRst(null)} onDone={(m) => { setRst(null); setMsg(m); }} />}
     </>
+  );
+}
+
+function EditUser({ u, onCancel, onDone }) {
+  const [f, setF] = useState({ name: u.name, department: u.department, year: u.year || '', semester: u.semester || '', batch: u.batch || '', section: u.section || '', group: u.group || '' }); const [err, setErr] = useState('');
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  async function go(e) { e.preventDefault(); setErr(''); try { await api('/admin/users/' + u.id, { method: 'PATCH', body: f }); onDone('Updated ' + u.email); } catch (x) { setErr(x.message); } }
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="ed-t" onClick={(e) => e.stopPropagation()} onSubmit={go}>
+        <h2 id="ed-t">Edit {u.email}</h2>
+        <label>Name<input required value={f.name} onChange={set('name')} /></label>
+        <div className="row"><label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label>
+          {u.role === 'student' && <><label>Year<select value={f.year} onChange={set('year')}><option value="">-</option>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Semester<select value={f.semester} onChange={set('semester')}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y}>{y}</option>)}</select></label></>}</div>
+        {(u.role === 'student' || u.role === 'counsellor') && <div className="row"><label>Batch<input value={f.batch} onChange={set('batch')} /></label><label>Section<input value={f.section} onChange={set('section')} /></label><label>Group<input value={f.group} onChange={set('group')} /></label></div>}
+        <Err e={err} />
+        <div className="row"><button type="button" className="ghost" onClick={onCancel}>Cancel</button><button className="btn">Save</button></div>
+      </form>
+    </div>
+  );
+}
+function ResetPw({ u, onCancel, onDone }) {
+  const [pw, setPw] = useState(''); const [err, setErr] = useState('');
+  async function go(e) { e.preventDefault(); setErr(''); try { await api('/admin/users/' + u.id + '/reset-password', { method: 'POST', body: { password: pw } }); onDone('Temporary password set for ' + u.email + (u.demo ? '.' : '. They must change it at next login.')); } catch (x) { setErr(x.message); } }
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="rp-t" onClick={(e) => e.stopPropagation()} onSubmit={go}>
+        <h2 id="rp-t">Reset password</h2>
+        <p className="muted">Set a temporary password for {u.name} ({u.email}). Share it with them privately.</p>
+        <label>Temporary password (8+)<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
+        <Err e={err} />
+        <div className="row"><button type="button" className="ghost" onClick={onCancel}>Cancel</button><button className="btn">Set password</button></div>
+      </form>
+    </div>
+  );
+}
+function Forgot({ onBack, mail }) {
+  const [email, setEmail] = useState(''); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  async function go(e) { e.preventDefault(); setErr(''); setBusy(true); try { const r = await api('/auth/forgot', { method: 'POST', body: { email } }); setMsg(r.message); } catch (x) { setErr(x.message); } finally { setBusy(false); } }
+  return (
+    <main className="center"><form className="card auth" onSubmit={go}>
+      <div className="auth-logo"><Mark size={56} /><h1 className="wordmark big">Forgot password</h1></div>
+      {mail ? <>
+        <p className="muted">Enter your account email. If it exists, we send a link that works for 30 minutes.</p>
+        <label>Email<input type="email" required autoComplete="email" onChange={(e) => setEmail(e.target.value)} /></label>
+        <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
+        <button className="btn" disabled={busy}>Send reset link</button></>
+        : <p className="muted">Email reset is not switched on yet. Ask your college administrator to set a temporary password for you.</p>}
+      <button type="button" className="link" onClick={onBack}>← Back to login</button>
+    </form></main>
+  );
+}
+function ResetPage({ token }) {
+  const [pw, setPw] = useState(''); const [again, setAgain] = useState(''); const [err, setErr] = useState(''); const [done, setDone] = useState(false);
+  async function go(e) { e.preventDefault(); setErr(''); if (pw !== again) return setErr('The two passwords do not match'); try { await api('/auth/reset', { method: 'POST', body: { token, password: pw } }); setDone(true); } catch (x) { setErr(x.message); } }
+  return (
+    <main className="center"><form className="card auth" onSubmit={go}>
+      <div className="auth-logo"><Mark size={56} /><h1 className="wordmark big">Choose a new password</h1></div>
+      {done ? <><p className="ok" role="status">Password changed. You can log in now.</p><a className="btn" href="/">Go to login</a></> : <>
+        <label>New password (8+)<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
+        <label>New password again<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setAgain(e.target.value)} /></label>
+        <Err e={err} /><button className="btn">Save password</button></>}
+    </form></main>
   );
 }
 
@@ -505,4 +572,4 @@ function Main() {
   );
 }
 
-export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); return m ? <PublicView token={m[1]} /> : <Main />; }
+export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); const r = location.pathname.match(/^\/reset\/([a-f0-9]{64})\/?$/); return r ? <ResetPage token={r[1]} /> : m ? <PublicView token={m[1]} /> : <Main />; }

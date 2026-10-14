@@ -248,3 +248,4 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .lp-copy .small{margin-top:16px}.hero .who{margin:6px 0 12px}.hero .eyebrow{margin-bottom:0}
 .chart{align-content:start}.charts>.chart:nth-child(4){grid-column:span 2}@media(max-width:700px){.charts>.chart:nth-child(4){grid-column:auto}}
 .cf{display:grid;justify-items:center;min-height:65px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.actions .ghost{padding:6px 12px;min-height:36px;font-size:.85rem}

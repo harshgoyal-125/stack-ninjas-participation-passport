@@ -14,6 +14,9 @@ const schema = new mongoose.Schema({
   group: { type: String, trim: true, maxlength: 10 },
   demo: { type: Boolean, default: false },
   mustChangePassword: { type: Boolean, default: false },
+  resetTokenHash: { type: String, select: false },
+  resetExpires: { type: Date, select: false },
+  resetRequestedAt: { type: Date, select: false },
 }, { timestamps: true });
 schema.index({ rollNo: 1 }, { unique: true, partialFilterExpression: { rollNo: { $type: 'string' } } });
 module.exports = mongoose.model('User', schema);

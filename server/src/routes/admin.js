@@ -32,6 +32,35 @@ router.post('/users', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// Admin sets a temporary password; the user must change it at next login. The password is never echoed back.
+router.post('/users/:id/reset-password', async (req, res, next) => {
+  try {
+    if (!isId(req.params.id)) return res.status(404).json({ error: 'Not found' });
+    const pw = str(req.body.password);
+    if (pw.length < 8 || pw.length > 72) return res.status(400).json({ error: 'Temporary password must be 8-72 characters' });
+    const u = await User.findById(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Not found' });
+    u.passwordHash = await bcrypt.hash(pw, 10); u.mustChangePassword = !u.demo; await u.save();
+    res.json({ ok: true, email: u.email });
+  } catch (e) { next(e); }
+});
+// Admin fixes a user's details (not password, not role, not email).
+router.patch('/users/:id', async (req, res, next) => {
+  try {
+    if (!isId(req.params.id)) return res.status(404).json({ error: 'Not found' });
+    const u = await User.findById(req.params.id);
+    if (!u) return res.status(404).json({ error: 'Not found' });
+    const b = req.body;
+    if (b.name !== undefined) { if (!str(b.name)) return res.status(400).json({ error: 'Name cannot be empty' }); u.name = str(b.name).slice(0, 80); }
+    if (b.department !== undefined) { if (!User.DEPARTMENTS.includes(str(b.department))) return res.status(400).json({ error: 'Invalid department' }); u.department = str(b.department); }
+    if (b.year !== undefined && b.year !== '') { const y = Number(b.year); if (!(y >= 1 && y <= 4)) return res.status(400).json({ error: 'Year must be 1-4' }); u.year = y; }
+    if (b.semester !== undefined && b.semester !== '') { const y = Number(b.semester); if (!(y >= 1 && y <= 8)) return res.status(400).json({ error: 'Semester must be 1-8' }); u.semester = y; }
+    for (const k of ['batch', 'section', 'group']) if (b[k] !== undefined) u[k] = str(b[k]).slice(0, 30) || undefined;
+    await u.save();
+    res.json({ user: view(u) });
+  } catch (e) { next(e); }
+});
+
 // Minimal RFC4180 parser (quoted fields, doubled quotes, CRLF).
 function parseCsv(text) {
   const rows = []; let row = [], cell = '', q = false;

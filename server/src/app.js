@@ -34,6 +34,9 @@ function createApp() {
   const limiter = process.env.NODE_ENV === 'test' ? (q, s, n) => n() : rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: true, legacyHeaders: false });
   const authLimiter = process.env.NODE_ENV === 'test' ? (q, s, n) => n() : rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false });
   app.use('/api', limiter);
+  const forgotLimiter = process.env.NODE_ENV === 'test' ? (q, s, n) => n() : rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
+  app.use('/api/auth/forgot', forgotLimiter);
+  app.use('/api/auth/reset', forgotLimiter);
   app.use('/api/auth', authLimiter, auth);
   app.use('/api/activities', activities);
   app.use('/api/reports', reports);
