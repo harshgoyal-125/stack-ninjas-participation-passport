@@ -20,6 +20,8 @@ const schema = new mongoose.Schema({
   resetExpires: { type: Date, select: false },
   resetRequestedAt: { type: Date, select: false },
 }, { timestamps: true });
+schema.index({ role: 1, department: 1, batch: 1, section: 1, group: 1 });
+schema.index({ role: 1, name: 1 });
 schema.index({ enrollmentNo: 1 }, { unique: true, partialFilterExpression: { enrollmentNo: { $type: 'string' } } });
 schema.index({ rollNo: 1 }, { unique: true, partialFilterExpression: { rollNo: { $type: 'string' } } });
 module.exports = mongoose.model('User', schema);

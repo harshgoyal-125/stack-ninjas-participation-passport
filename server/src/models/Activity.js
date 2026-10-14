@@ -15,5 +15,8 @@ const schema = new mongoose.Schema({
   reviewedAt: Date,
   certificate: { filename: String, mime: String, size: Number, data: { type: Buffer, select: false } },
 }, { timestamps: true });
+schema.index({ student: 1, status: 1, date: -1 });
+schema.index({ department: 1, status: 1, date: -1 });
+schema.index({ status: 1, createdAt: -1 });
 module.exports = mongoose.model('Activity', schema);
 module.exports.TYPES = TYPES;

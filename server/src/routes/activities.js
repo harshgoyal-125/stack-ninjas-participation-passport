@@ -35,7 +35,7 @@ function cert(file) {
 }
 const up = (req, res, next) => upload.single('certificate')(req, res, next);
 
-const { activityScope } = require('../scope');
+const { activityScope, paging } = require('../scope');
 async function loadScoped(req, res, select) {
   if (!isId(req.params.id)) { res.status(404).json({ error: 'Not found' }); return null; }
   let q = Activity.findOne({ _id: req.params.id, ...(await activityScope(req.user)) });
@@ -63,8 +63,9 @@ router.get('/', async (req, res, next) => {
     if (status) { if (!['submitted', 'verified', 'changes_needed'].includes(status)) return res.status(400).json({ error: 'Bad status' }); filter.status = status; }
     if (type) { if (!Activity.TYPES.includes(type)) return res.status(400).json({ error: 'Bad type' }); filter.type = type; }
     if (q) filter.title = { $regex: q.slice(0, 50).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
-    const list = await Activity.find(filter).populate('student', 'name year').sort({ createdAt: -1 }).limit(200);
-    res.json({ activities: list.map(view) });
+    const pg = paging(req.query, 50, 100);
+    const [list, total] = await Promise.all([Activity.find(filter).populate('student', 'name year').sort({ createdAt: -1 }).skip(pg.skip).limit(pg.pageSize), Activity.countDocuments(filter)]);
+    res.json({ activities: list.map(view), total, page: pg.page, pages: Math.max(1, Math.ceil(total / pg.pageSize)) });
   } catch (e) { next(e); }
 });
 

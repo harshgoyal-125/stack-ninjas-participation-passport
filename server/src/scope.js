@@ -19,4 +19,10 @@ async function studentQuery(user) {
   if (user.role === 'coordinator') for (const k of ['batch', 'section', 'group']) if (user[k]) q[k] = user[k];
   return q;
 }
-module.exports = { activityScope, studentQuery };
+// page / pageSize from the query string, clamped so one request never returns an unbounded list.
+function paging(query, def = 25, max = 100) {
+  const pageSize = Math.min(max, Math.max(1, parseInt(query.pageSize, 10) || def));
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  return { page, pageSize, skip: (page - 1) * pageSize };
+}
+module.exports = { activityScope, studentQuery, paging };

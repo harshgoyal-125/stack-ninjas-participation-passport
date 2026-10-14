@@ -208,7 +208,7 @@ describe('first login, CSV import, counsellor scope', () => {
     expect(st.body.students.map((x) => x.name)).toEqual(['s1@a.com']);
     const H = (t) => ({ Authorization: 'Bearer ' + t });
     const an = await request(app).get('/api/reports/analytics').set(H(c));
-    expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.byEvent[0].key).toBe('One'); expect(an.body.byCoordinator).toBeUndefined();
+    expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.charts.event[0].key).toBe('One'); expect(an.body.byCoordinator).toBeUndefined();
     const anH = await request(app).get('/api/reports/analytics').set(H(ho));
     expect(anH.body.students).toBe(2); expect(anH.body.byCoordinator.length).toBe(1); expect(anH.body.byCoordinator[0].students).toBe(1); expect(anH.body.byCoordinator[0].verified).toBe(1);
     expect((await request(app).get('/api/reports/analytics?year=3').set(H(ho))).body.students).toBe(0);
@@ -349,6 +349,18 @@ describe('branch change, enrollment number, groups, DS', () => {
     expect(a.status).toBe(201); expect(a.body.user.department).toBe('AI');
     for (const r of ['faculty', 'counsellor', 'coordinator']) { const x = await request(app).post('/api/admin/users').set(H(t)).send(b({ role: r })); expect(x.status).toBe(201); expect(x.body.user.role).toBe('coordinator'); }
     expect((await request(app).post('/api/admin/users').set(H(t)).send(b({ role: 'wizard' }))).status).toBe(400);
+  });
+  test('nobody can create or promote to admin, even an admin; users list is paged and filterable', async () => {
+    const t = await mk('admin', 'ad@a.com', 'IT'); const st = await mk('student', 'sx@a.com', 'IT');
+    const b = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'IT', year: 1, ...extra });
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(b({ role: 'admin' }))).status).toBe(400);
+    const u = await User.findOne({ email: 'sx@a.com' });
+    await request(app).patch('/api/admin/users/' + u._id).set(H(t)).send({ role: 'admin' });
+    expect((await User.findById(u._id)).role).toBe('student');
+    for (let i = 0; i < 30; i++) await request(app).post('/api/admin/users').set(H(t)).send(b({}));
+    const p1 = await request(app).get('/api/admin/users?pageSize=10&page=2&role=student').set(H(t));
+    expect(p1.body.users.length).toBe(10); expect(p1.body.total).toBeGreaterThan(30); expect(p1.body.page).toBe(2);
+    expect((await request(app).get('/api/admin/users?q=sx@a.com').set(H(t))).body.total).toBe(1);
   });
   test('enrollment number is unique', async () => {
     const t = await mk('admin', 'ad@a.com', 'IT');

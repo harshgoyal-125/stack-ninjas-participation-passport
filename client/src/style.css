@@ -517,3 +517,11 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 :root:root:root select option:checked,:root:root:root select option:hover{background:#2B4A8F linear-gradient(0deg,#2B4A8F,#2B4A8F);color:#fff}
 :root:root:root select option:disabled{color:#8EA0C8}
 :root:root:root .btn.small,:root:root:root .ghost{font-size:14px;font-weight:700;line-height:1.2}
+/* lists that stay bounded: fixed-height scroll box with a sticky header, and a pager */
+:root:root:root .scrollbox{max-height:520px;overflow:auto}
+:root:root:root .scrollbox thead th{position:sticky;top:0;z-index:2;background:#14224a}
+:root:root:root .pager{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap}
+:root:root:root .pager button:disabled{opacity:.45;cursor:not-allowed}
+:root:root:root .chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+:root:root:root .chart-head h3{margin:0}
+:root:root:root td,:root:root:root .srow b,:root:root:root .srow p{overflow-wrap:anywhere}

@@ -4,10 +4,11 @@ const User = require('../models/User');
 const Activity = require('../models/Activity');
 const multer = require('multer');
 const { requireAuth, requireRole, isId } = require('../middleware');
+const { paging } = require('../scope');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1 } });
 const MAX_ROWS = 200;
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
-const ROLES = ['student', 'coordinator', 'hod', 'admin'];
+const ROLES = ['student', 'coordinator', 'hod'];  // admin is never created through the API: there is exactly one admin (from env)
 const view = (u) => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department, year: u.year, semester: u.semester, enrollmentNo: u.enrollmentNo, rollNo: u.rollNo, batch: u.batch, section: u.section, group: u.group, demo: !!u.demo, createdAt: u.createdAt });
 router.use(requireAuth, requireRole('admin'));
 
@@ -140,7 +141,15 @@ router.post('/users/import', (req, res, next) => upload.single('file')(req, res,
   } catch (e) { next(e); }
 });
 router.get('/users', async (req, res, next) => {
-  try { const u = await User.find().sort({ role: 1, name: 1 }).limit(500); res.json({ users: u.map(view) }); } catch (e) { next(e); }
+  try {
+    const f = {}, role = str(req.query.role), dept = str(req.query.department), q = str(req.query.q).slice(0, 60);
+    if (ROLES.includes(role)) f.role = role;
+    if (User.DEPARTMENTS.includes(dept)) f.department = dept;
+    if (q) { const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); f.$or = [{ name: re }, { email: re }, { rollNo: re }, { enrollmentNo: re }]; }
+    const pg = paging(req.query, 25, 100);
+    const [u, total] = await Promise.all([User.find(f).sort({ role: 1, name: 1 }).skip(pg.skip).limit(pg.pageSize), User.countDocuments(f)]);
+    res.json({ users: u.map(view), total, page: pg.page, pages: Math.max(1, Math.ceil(total / pg.pageSize)) });
+  } catch (e) { next(e); }
 });
 // Delete a user created by mistake. Safeguards: not yourself, never the last admin.
 // Deleting a student also deletes their activities and certificates (they would be orphaned otherwise).

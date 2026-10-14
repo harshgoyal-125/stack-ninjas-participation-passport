@@ -168,7 +168,7 @@ function Landing({ onLogin }) {
 function Student({ user }) {
   const [list, setList] = useState([]); const [rep, setRep] = useState(null); const [form, setForm] = useState(null); const [tab, setTab] = useState('activities'); const [group, setGroup] = useState('All'); const [err, setErr] = useState('');
   const load = () => Promise.all([api('/activities'), api('/reports/me')]).then(([a, r]) => { setList(a.activities); setRep(r); }).catch((e) => setErr(e.message));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { const t = setTimeout(load, uq ? 250 : 0); return () => clearTimeout(t); }, [page, uq, urole]);
   if (form) return <ActivityForm initial={form === 'new' ? null : form} onDone={() => { setForm(null); load(); }} onCancel={() => setForm(null)} />;
   const GROUP = { Hackathon: 'Technical', Workshop: 'Technical', Seminar: 'Technical', Competition: 'Technical', Cultural: 'Cultural', Sports: 'Sports', Other: 'Technical' };
   const ICON = { Technical: '/img/tech.jpg', Cultural: '/img/art.jpg', Sports: '/img/sport.jpg' };
@@ -218,10 +218,31 @@ function Student({ user }) {
   );
 }
 
+function Pager({ page, pages, total, onPage }) {
+  if (pages <= 1) return total > 0 ? <p className="muted small pager">{total} in total</p> : null;
+  return (
+    <div className="pager" role="navigation" aria-label="Pages">
+      <button className="ghost" disabled={page <= 1} onClick={() => onPage(page - 1)}>Previous</button>
+      <span className="muted small">Page {page} of {pages} · {total} in total</span>
+      <button className="ghost" disabled={page >= pages} onClick={() => onPage(page + 1)}>Next</button>
+    </div>
+  );
+}
+function ChartPanel({ an }) {
+  const opts = [['year', 'Year'], ['type', 'Type'], ['month', 'Month'], ['event', 'Event name'], ['branch', 'Branch'], ['status', 'Status'], ...(an.charts.coordinator ? [['coordinator', 'Faculty Coordinator']] : [])];
+  const [by, setBy] = useState('type');
+  const rows = an.charts[by] || [];
+  return (
+    <section className="glass card chart"><div className="chart-head"><h3>Verified records by</h3>
+      <select aria-label="Chart category" value={by} onChange={(e) => setBy(e.target.value)}>{opts.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
+      {by === 'month' ? <MonthChart rows={rows} bare /> : <Bars rows={rows} bare />}
+    </section>
+  );
+}
 function Review({ user }) {
-  const [list, setList] = useState([]); const [filter, setFilter] = useState('submitted'); const [err, setErr] = useState(''); const [note, setNote] = useState({});
-  const load = () => api('/activities?status=' + filter).then((r) => setList(r.activities)).catch((e) => setErr(e.message));
-  useEffect(() => { load(); }, [filter]);
+  const [list, setList] = useState([]); const [filter, setFilter] = useState('submitted'); const [err, setErr] = useState(''); const [note, setNote] = useState({}); const [page, setPage] = useState(1); const [meta, setMeta] = useState({ pages: 1, total: 0 });
+  const load = () => api('/activities?pageSize=20&page=' + page + '&status=' + filter).then((r) => { setList(r.activities); setMeta({ pages: r.pages, total: r.total }); }).catch((e) => setErr(e.message));
+  useEffect(() => { load(); }, [filter, page]);
   async function decide(id, decision) {
     setErr('');
     try { await api(`/activities/${id}/review`, { method: 'POST', body: { decision, note: note[id] || '' } }); load(); } catch (x) { setErr(x.message); }
@@ -229,9 +250,10 @@ function Review({ user }) {
   return (
     <>
       <h2>Review inbox · {user.department}</h2>
-      <nav className="tabs">{[['submitted', 'To review'], ['changes_needed', 'Sent back'], ['verified', 'Verified']].map(([k, l]) => <button key={k} aria-selected={filter === k} onClick={() => setFilter(k)}>{l}</button>)}</nav>
+      <nav className="tabs">{[['submitted', 'To review'], ['changes_needed', 'Sent back'], ['verified', 'Verified']].map(([k, l]) => <button key={k} aria-selected={filter === k} onClick={() => { setFilter(k); setPage(1); }}>{l}</button>)}</nav>
       <Err e={err} />
       {list.length === 0 && <p className="empty glass">Nothing here.</p>}
+      <Pager page={page} pages={meta.pages} total={meta.total} onPage={setPage} />
       {list.map((a) => (
         <article key={a.id} className="glass card">
           <div className="between"><h3>{a.title}</h3><Badge s={a.status} /></div>
@@ -247,25 +269,25 @@ function Review({ user }) {
   );
 }
 
-function Bars({ title, rows, empty }) {
+function Bars({ title, rows, empty, bare }) {
   const max = Math.max(1, ...rows.map((x) => x.count));
   return (
-    <section className="glass card chart"><h3>{title}</h3>
+    <div className={bare ? '' : 'glass card chart'}>{!bare && <h3>{title}</h3>}
       {rows.length === 0 && <p className="muted">{empty || 'No verified records yet.'}</p>}
       {rows.map((x) => <div key={x.key} className="bar"><span title={x.key}>{x.key}</span><i style={{ width: (x.count / max) * 100 + '%' }} /><b>{x.count}</b></div>)}
-    </section>
+    </div>
   );
 }
-function MonthChart({ rows }) {
+function MonthChart({ rows, bare }) {
   const max = Math.max(1, ...rows.map((x) => x.count));
   const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return (
-    <section className="glass card chart"><h3>By month</h3>
+    <div className={bare ? '' : 'glass card chart'}>{!bare && <h3>By month</h3>}
       {rows.length === 0 ? <p className="muted">No verified records yet.</p> :
         <div className="cols" role="img" aria-label={'Verified activities per month: ' + rows.map((x) => x.key + ' ' + x.count).join(', ')}>
           {rows.map((x) => <div key={x.key} className="col"><b>{x.count}</b><i style={{ height: (x.count / max) * 100 + '%' }} /><span>{MN[+x.key.slice(5) - 1]} {x.key.slice(2, 4)}</span></div>)}
         </div>}
-    </section>
+    </div>
   );
 }
 function StudentDetail({ id, onBack }) {
@@ -285,10 +307,11 @@ function StudentDetail({ id, onBack }) {
   );
 }
 function Reports({ user }) {
-  const [an, setAn] = useState(null); const [st, setSt] = useState([]); const [err, setErr] = useState('');
+  const [an, setAn] = useState(null); const [st, setSt] = useState([]); const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0 }); const [page, setPage] = useState(1); const [dept, setDept] = useState(''); const [sec, setSec] = useState(''); const [grp, setGrp] = useState(''); const [err, setErr] = useState('');
   const [year, setYear] = useState(''); const [sem, setSem] = useState(''); const [q, setQ] = useState(''); const [open, setOpen] = useState(null);
-  const qs = (extra) => '?' + new URLSearchParams({ ...(year && { year }), ...(sem && { semester: sem }), ...extra }).toString();
-  useEffect(() => { setErr(''); Promise.all([api('/reports/analytics' + qs({})), api('/reports/student-list' + qs(q ? { q } : {}))]).then(([a, b]) => { setAn(a); setSt(b.students); }).catch((e) => setErr(e.message)); }, [year, sem, q]);
+  const qs = (extra) => '?' + new URLSearchParams({ ...(year && { year }), ...(sem && { semester: sem }), ...(dept && { department: dept }), ...(sec && { section: sec }), ...(grp && { group: grp }), ...extra }).toString();
+  useEffect(() => { setErr(''); Promise.all([api('/reports/analytics' + qs({})), api('/reports/student-list' + qs({ page, pageSize: 20, ...(q && { q }) }))]).then(([a, b]) => { setAn(a); setSt(b.students); setMeta({ page: b.page, pages: b.pages, total: b.total }); }).catch((e) => setErr(e.message)); }, [year, sem, q, dept, sec, grp, page]);
+  const filt = (set) => (e) => { set(e.target.value); setPage(1); };
   if (open) return <StudentDetail id={open} onBack={() => setOpen(null)} />;
   if (!an) return <Err e={err} />;
   const t = an.totals;
@@ -297,18 +320,21 @@ function Reports({ user }) {
       <h2>Verified participation report</h2>
       <p className="muted">Charts count verified records only. {t.inReview} in review and {t.changesNeeded} needing changes are not included.</p>
       <div className="glass filters">
-        <label>Year<select value={year} onChange={(e) => setYear(e.target.value)}><option value="">All</option>{[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
-        <label>Semester<select value={sem} onChange={(e) => setSem(e.target.value)}><option value="">All</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
-        <label className="grow">Find student<input value={q} placeholder="Name, email or roll number" onChange={(e) => setQ(e.target.value)} /></label>
+        <label>Year<select value={year} onChange={filt(setYear)}><option value="">All</option>{[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
+        <label>Semester<select value={sem} onChange={filt(setSem)}><option value="">All</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y} value={y}>{y}</option>)}</select></label>
+        {user.role === 'admin' && <label>Branch<select value={dept} onChange={filt(setDept)}><option value="">All</option>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label>}
+        <label>Section<input value={sec} maxLength={10} size={4} onChange={filt(setSec)} /></label>
+        <label>Group<select value={grp} onChange={filt(setGrp)}><option value="">All</option><option>G1</option><option>G2</option></select></label>
+        <label className="grow">Find student<input value={q} placeholder="Name, email or roll number" onChange={filt(setQ)} /></label>
       </div>
       <div className="kpis"><div className="glass kpi"><b>{an.students}</b><span>Students</span></div><div className="glass kpi"><b>{t.verified}</b><span>Verified</span></div><div className="glass kpi"><b>{t.inReview}</b><span>In review</span></div><div className="glass kpi"><b>{t.changesNeeded}</b><span>Changes needed</span></div></div>
-      <div className="charts"><Bars title="By year" rows={an.byYear} /><Bars title="By type" rows={an.byType} /><MonthChart rows={an.byMonth} /><Bars title="By event name (top 10)" rows={an.byEvent} /></div>
+      <ChartPanel an={an} />
       {an.byCoordinator && <section className="glass card"><h3>By Faculty Coordinator</h3>
         {an.byCoordinator.length === 0 && <p className="muted">No Faculty Coordinators yet.</p>}
-        <div className="tbl">{an.byCoordinator.map((c) => <div key={c.email} className="srow"><div><b>{c.name}</b><p className="muted">{c.department}{c.batch ? ' · Batch ' + c.batch : ''}{c.section ? ' · Sec ' + c.section : ''}{c.group ? ' · Grp ' + c.group : ''}</p></div><span><b>{c.verified}</b> verified · {c.students} students</span></div>)}</div></section>}
-      <section className="glass card"><h3>Students ({st.length})</h3>
+        <div className="tbl scrollbox">{an.byCoordinator.map((c) => <div key={c.email} className="srow"><div><b>{c.name}</b><p className="muted">{c.department}{c.batch ? ' · Batch ' + c.batch : ''}{c.section ? ' · Sec ' + c.section : ''}{c.group ? ' · Grp ' + c.group : ''}</p></div><span><b>{c.verified}</b> verified · {c.students} students</span></div>)}</div></section>}
+      <section className="glass card"><h3>Students ({meta.total})</h3>
         {st.length === 0 && <p className="muted">No students match.</p>}
-        <div className="tbl">{st.map((x) => <button key={x.id} className="srow rowbtn" onClick={() => setOpen(x.id)}><div><b>{x.name}</b><p className="muted">{x.department}{x.year ? ' · Y' + x.year : ''}{x.semester ? ' · S' + x.semester : ''}{x.rollNo ? ' · ' + x.rollNo : ''}</p></div><span><b>{x.verified}</b> verified · {x.inReview} review · {x.changesNeeded} changes</span></button>)}</div></section>
+        <div className="tbl">{st.map((x) => <button key={x.id} className="srow rowbtn" onClick={() => setOpen(x.id)}><div><b>{x.name}</b><p className="muted">{x.department}{x.year ? ' · Y' + x.year : ''}{x.semester ? ' · S' + x.semester : ''}{x.rollNo ? ' · ' + x.rollNo : ''}</p></div><span><b>{x.verified}</b> verified · {x.inReview} review · {x.changesNeeded} changes</span></button>)}</div><Pager page={meta.page} pages={meta.pages} total={meta.total} onPage={setPage} /></section>
       <button className="btn" onClick={() => openBlob('/reports/export.csv', 'verified-participation.csv')}>Download CSV (opens in Excel)</button>
       {user.role === 'admin' && <AdminUsers />}
     </>
@@ -317,9 +343,9 @@ function Reports({ user }) {
 
 function AdminUsers() {
   const blank = { role: 'student', department: 'IT', year: 1 };
-  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [del, setDel] = useState(null); const [edit, setEdit] = useState(null); const [rst, setRst] = useState(null);
+  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0 }); const [page, setPage] = useState(1); const [uq, setUq] = useState(''); const [urole, setUrole] = useState(''); const [del, setDel] = useState(null); const [edit, setEdit] = useState(null); const [rst, setRst] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const load = () => api('/admin/users').then((r) => setUsers(r.users)).catch((x) => setErr(x.message));
+  const load = () => api('/admin/users?' + new URLSearchParams({ page, pageSize: 20, ...(uq && { q: uq }), ...(urole && { role: urole }) })).then((r) => { setUsers(r.users); setMeta({ page: r.page, pages: r.pages, total: r.total }); }).catch((x) => setErr(x.message));
   useEffect(() => { load(); }, []);
   async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + roleName(r.user.role) + ': ' + r.user.email); setF(blank); e.target.reset(); load(); } catch (x) { setErr(x.message); } }
   async function remove() { const u = del; setDel(null); setErr(''); setMsg(''); try { const r = await api('/admin/users/' + u.id, { method: 'DELETE' }); setMsg('Deleted ' + u.email + (r.activitiesRemoved ? ' and ' + r.activitiesRemoved + ' record(s)' : '')); load(); } catch (x) { setErr(x.message); } }
@@ -331,7 +357,7 @@ function AdminUsers() {
         <label>Name<input required onChange={set('name')} /></label>
         <label>Email<input type="email" required onChange={set('email')} /></label>
         <label>Temporary password (8+)<PwInput minLength={8} required onChange={set('password')} /></label>
-        <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'coordinator', 'hod', 'admin'].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
+        <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'coordinator', 'hod'].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
           <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
         {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Enrollment number<input onChange={set('enrollmentNo')} /></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
         {(stu || cou) && <div className="row"><label>Batch<input onChange={set('batch')} /></label><label>Section<input onChange={set('section')} /></label><label>Group<select value={f.group || ''} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
@@ -339,12 +365,15 @@ function AdminUsers() {
         <button className="btn">Create</button>
       </form>
       <CsvImport onDone={load} />
-      <section className="glass card"><h3>All users ({users.length})</h3>
-        <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
+      <section className="glass card"><h3>All users ({meta.total})</h3>
+        <div className="glass filters"><label className="grow">Search<input value={uq} placeholder="Name, email, roll or enrollment" onChange={(e) => { setUq(e.target.value); setPage(1); }} /></label>
+          <label>Role<select value={urole} onChange={(e) => { setUrole(e.target.value); setPage(1); }}><option value="">All</option>{['student', 'coordinator', 'hod', 'admin'].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label></div>
+        <div className="scrollbox" style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
           {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{roleName(u.role)}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
             <td className="small">{[u.year && 'Y' + u.year, u.semester && 'Sem ' + u.semester, u.enrollmentNo && 'Enr ' + u.enrollmentNo, u.rollNo, u.batch, u.section, u.group].filter(Boolean).join(' · ')}</td>
             <td className="actions"><button className="ghost" onClick={() => setEdit(u)} aria-label={'Edit ' + u.email}>Edit</button><button className="ghost" onClick={() => setRst(u)} aria-label={'Reset password for ' + u.email}>Reset password</button><button className="ghost" onClick={() => setDel(u)} aria-label={'Delete ' + u.email}>Delete</button></td></tr>)}
         </tbody></table></div>
+        <Pager page={meta.page} pages={meta.pages} total={meta.total} onPage={setPage} />
       </section>
       {del && <ConfirmDelete u={del} onCancel={() => setDel(null)} onConfirm={remove} />}
       {edit && <EditUser u={edit} onCancel={() => setEdit(null)} onDone={(m) => { setEdit(null); setMsg(m); load(); }} />}
