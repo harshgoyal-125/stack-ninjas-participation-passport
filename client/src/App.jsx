@@ -53,7 +53,7 @@ function Auth({ onAuth, onBack }) {
     e.preventDefault(); setErr(''); setBusy(true);
     try { const r = await api('/auth/login', { method: 'POST', body: { ...f, turnstileToken: tok } }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); if (window.turnstile && wid.current !== null) { window.turnstile.reset(wid.current); setTok(''); } } finally { setBusy(false); }
   }
-  if (forgot) return <Forgot mail={mail} onBack={() => setForgot(false)} />;
+  if (forgot) return <Forgot mail={mail} site={site} onBack={() => setForgot(false)} />;
   return (
     <main className="center split">
       <aside className="auth-art" aria-hidden="true">
@@ -383,17 +383,24 @@ function ResetPw({ u, onCancel, onDone }) {
     </div>
   );
 }
-function Forgot({ onBack, mail }) {
+function Forgot({ onBack, mail, site }) {
+  const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
+  useEffect(() => {
+    if (!site || !mail) return;
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
+  }, [site, mail]);
   const [email, setEmail] = useState(''); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
-  async function go(e) { e.preventDefault(); setErr(''); setBusy(true); try { const r = await api('/auth/forgot', { method: 'POST', body: { email } }); setMsg(r.message); } catch (x) { setErr(x.message); } finally { setBusy(false); } }
+  async function go(e) { e.preventDefault(); setErr(''); setBusy(true); try { const r = await api('/auth/forgot', { method: 'POST', body: { email, turnstileToken: tok } }); setMsg(r.message); } catch (x) { setErr(x.message); } finally { setBusy(false); if (window.turnstile && wid.current !== null) { window.turnstile.reset(wid.current); setTok(''); } } }
   return (
     <main className="center"><form className="card auth" onSubmit={go}>
       <div className="auth-logo"><Mark size={56} /><h1 className="wordmark big">Forgot password</h1></div>
       {mail ? <>
         <p className="muted">Enter your account email. If it exists, we send a link that works for 30 minutes.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={(e) => setEmail(e.target.value)} /></label>
+        {site && <div ref={box} className="cf" />}
         <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
-        <button className="btn" disabled={busy}>Send reset link</button></>
+        <button className="btn" disabled={busy || (!!site && !tok)}>Send reset link</button></>
         : <p className="muted">Email reset is not switched on yet. Ask your college administrator to set a temporary password for you.</p>}
       <button type="button" className="link" onClick={onBack}>← Back to login</button>
     </form></main>
