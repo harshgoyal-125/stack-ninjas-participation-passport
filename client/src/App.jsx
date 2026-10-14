@@ -599,12 +599,12 @@ function PublicView({ token }) {
 }
 
 function Main() {
-  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false); const [askPw, setAskPw] = useState(false);
+  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [reveal, setReveal] = useState(false); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false); const [askPw, setAskPw] = useState(false);
   useEffect(() => { if (hasToken()) api('/auth/me').then((r) => setUser(r.user)).catch(() => setToken('')).finally(() => setReady(true)); }, []);
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
   if (!user) {
-    if (!seen) return <Splash onDone={() => { sessionStorage.setItem('pp_seen', '1'); setSeen(true); }} />;
-    if (!auth) return <Landing onLogin={() => setAuth('login')} />;
+    if (!seen) return <Splash onDone={() => { sessionStorage.setItem('pp_seen', '1'); setReveal(true); setSeen(true); }} />;
+    if (!auth) return <>{reveal && <div className="white-reveal" aria-hidden="true" onAnimationEnd={() => setReveal(false)} />}<Landing onLogin={() => setAuth('login')} /></>;
     return <Auth onAuth={setUser} onBack={() => setAuth('')} />;
   }
   if (user.mustChangePassword) return <ChangePassword onDone={setUser} />;

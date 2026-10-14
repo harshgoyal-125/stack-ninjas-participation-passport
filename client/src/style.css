@@ -398,3 +398,6 @@ input[type=password]::-ms-reveal,input[type=password]::-ms-clear,input::-ms-clea
 .prof-dl{display:grid;grid-template-columns:110px 1fr;gap:8px 14px;margin:10px 0 0}
 .prof-dl dt{color:var(--muted);font-size:13px}.prof-dl dd{margin:0;word-break:break-word;font-weight:600}
 .prof-actions{display:flex;gap:12px;flex-wrap:wrap;margin:18px 0 8px}
+/* white screen then 0.6s reveal of home after the intro */
+.white-reveal{position:fixed;inset:0;background:#fff;z-index:9999;pointer-events:none;animation:whiteOut .6s ease .12s both}
+@keyframes whiteOut{from{opacity:1}to{opacity:0}}
