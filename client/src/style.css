@@ -109,3 +109,15 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;
 .wrap>*:nth-child(2){animation-delay:.06s}.wrap>*:nth-child(3){animation-delay:.12s}.wrap>*:nth-child(4){animation-delay:.18s}
 .tabs+*,.grid>.card{animation:pagein .4s ease both}
 @media (prefers-reduced-motion:reduce){.overlay,.dialog,.overlay.out,.overlay.out .dialog,.wrap>*,.center>*,.landing,.shell>.top,.tabs+*,.grid>.card{animation:none!important}}
+
+.brand img{mix-blend-mode:normal}.hero3d{mix-blend-mode:normal;border-radius:22px}
+.auth .hero3d{mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;width:110px;height:110px;border-radius:24px;box-shadow:0 0 30px rgba(130,110,255,.45)}
+
+.logoframe{aspect-ratio:463/391;width:min(340px,82vw);border-radius:28px}
+.splash .logoframe img{border-radius:0;filter:blur(14px)}
+.logoframe::before{border-radius:28px}
+.star{offset-path:none}
+.hero .art.logo{box-shadow:none;border-radius:0;max-width:380px;filter:drop-shadow(0 0 28px rgba(130,110,255,.55));-webkit-mask-image:none;mask-image:none;background:none}
+.brand img{border-radius:0;background:none;filter:drop-shadow(0 0 8px rgba(130,110,255,.6))}
+.auth .hero3d{border-radius:0;box-shadow:none;background:none;width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(130,110,255,.6))}
+.hero .art{mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;filter:drop-shadow(0 0 24px rgba(130,110,255,.5))}.splash .logoframe img{filter:blur(14px)}@keyframes reveal{to{opacity:1;filter:blur(0);transform:none}}

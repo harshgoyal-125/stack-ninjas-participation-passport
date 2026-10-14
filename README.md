@@ -1,4 +1,4 @@
-# Participation Passport (SKIT021, Team Stack Ninjas)
+# CampusTrace (SKIT021, Team Stack Ninjas)
 
 A student participation record where **an uploaded certificate is evidence, not a verified record**. Students submit, faculty verify or send back with a reason, and every report counts verified records only.
 

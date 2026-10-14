@@ -19,8 +19,8 @@ function Auth({ onAuth, start = 'login', onBack }) {
   return (
     <main className="center">
       <form className="glass auth" onSubmit={go}>
-        <img className="hero3d" src="/img/hero.jpg" alt="" aria-hidden="true" />
-        <h1>Participation Passport</h1>
+        <img className="hero3d" src="/img/icon.png" alt="" aria-hidden="true" />
+        <h1>CampusTrace</h1>
         <p className="muted">One verified record of every activity you take part in.</p>
         {mode === 'register' && <label>Full name<input required maxLength={80} onChange={set('name')} /></label>}
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
@@ -74,7 +74,7 @@ function Splash({ onDone }) {
   useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 800 : 3800); return () => clearTimeout(t); }, []);
   return (
     <div className="splash" role="status" aria-label="CampusTrace loading" onClick={onDone}>
-      <div className="logoframe"><img src="/img/logo.jpg" alt="CampusTrace logo: Learn, Verify, Grow" /><i className="star" aria-hidden="true" /></div>
+      <div className="logoframe"><img src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" /><i className="star" aria-hidden="true" /></div>
     </div>
   );
 }
@@ -84,15 +84,15 @@ function Landing({ onLogin, onRegister }) {
   const who = [['Students', 'One personal record of every activity, with a clear status on each.'], ['Faculty', 'A review inbox with the certificate beside the record.'], ['Admin', 'Verified participation by department and type, with CSV export.']];
   return (
     <div className="shell landing">
-      <header className="top glass"><div className="brand"><img src="/img/hero.jpg" alt="" aria-hidden="true" /><span>Participation<br />Passport</span></div>
+      <header className="top glass"><div className="brand"><img src="/img/icon.png" alt="" aria-hidden="true" /><span>CampusTrace</span></div>
         <div className="navlinks"><button className="link" onClick={onRegister}>Create student account</button><button className="btn small" onClick={onLogin}>Login</button></div></header>
       <main className="wrap">
         <section className="glass hero">
           <div><p className="eyebrow">Student participation platform</p>
             <h2>Every activity.<em>One verified record.</em></h2>
-            <p className="lead">An uploaded certificate is evidence, not a verified record. Passport collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
+            <p className="lead">An uploaded certificate is evidence, not a verified record. CampusTrace collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
             <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>New student? Sign up</button></div></div>
-          <img className="art logo" src="/img/logo.jpg" alt="CampusTrace logo: Learn, Verify, Grow" />
+          <img className="art logo" src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" />
         </section>
         <h2 className="sec">How it works</h2>
         <div className="grid">{steps.map(([n, t, d]) => <article key={n} className="glass card acard"><span className="num">{n}</span><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
@@ -101,7 +101,7 @@ function Landing({ onLogin, onRegister }) {
         <section className="glass stats" aria-label="Status words">
           <div className="v"><b>✓</b><span>Verified</span></div><div className="r"><b>⏳</b><span>In review</span></div><div className="c"><b>!</b><span>Changes needed</span></div>
         </section>
-        <section className="glass banner"><div><h2>Ready to build your passport?</h2><p className="muted">Faculty and admin accounts are created by an administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
+        <section className="glass banner"><div><h2>Ready to build your record?</h2><p className="muted">Faculty and admin accounts are created by an administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
       </main>
     </div>
   );
@@ -124,9 +124,9 @@ function Student({ user }) {
           <p className="who">{user.name} · {user.department} · Year {user.year}</p>
           <h2>Every activity.<em>One beautiful journey.</em></h2>
           <p className="lead">Collect evidence. Track reviews. Keep your story.</p>
-          <div className="row"><button className="btn" onClick={() => setForm('new')}>+ Add participation</button><button className="ghost" onClick={() => setTab('report')}>View my passport</button></div>
+          <div className="row"><button className="btn" onClick={() => setForm('new')}>+ Add participation</button><button className="ghost" onClick={() => setTab('report')}>View my record</button></div>
         </div>
-        <img className="art" src="/img/hero.jpg" alt="" aria-hidden="true" />
+        <img className="art" src="/img/logo.png" alt="" aria-hidden="true" />
       </section>
       <section className="glass stats" aria-label="Your activity counts">
         <div className="v"><b>{rep ? rep.verifiedCount : '–'}</b><span>✓ Verified</span></div>
@@ -254,7 +254,7 @@ export default function App() {
   const staff = user.role !== 'student';
   return (
     <div className="shell">
-      <header className="top glass"><div className="brand"><img src="/img/hero.jpg" alt="" aria-hidden="true" /><span>Participation<br />Passport</span></div>
+      <header className="top glass"><div className="brand"><img src="/img/icon.png" alt="" aria-hidden="true" /><span>CampusTrace</span></div>
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
           {staff && <>{user.role === 'faculty' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || user.role === 'admin' ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <span className="pill" title={user.email}>{user.name} · {user.role}</span>
