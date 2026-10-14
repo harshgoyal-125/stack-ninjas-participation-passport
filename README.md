@@ -18,12 +18,12 @@ npm run build
 npm start
 ```
 ## Tests
-`npm test` (uses an in-memory MongoDB, or set `TEST_MONGO_URI`). 10 tests cover auth, access control, uploads, review flow and reports.
+`npm test` (uses an in-memory MongoDB, or set `TEST_MONGO_URI`). 28 tests cover auth, role scoping, uploads, review flow, reports, sharing, CSV import, lockout and password reset.
 
 ## Deploy (Render free + MongoDB Atlas M0)
 Use `render.yaml`. Set `MONGODB_URI`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`; `JWT_SECRET` is generated. Atlas: allow network access 0.0.0.0/0 and create a DB user.
 
 ## Security (what is actually tested)
-Tested: no role escalation at sign-up, NoSQL operator injection rejected, token required, student cannot read another student's record/certificate, student cannot call review/admin/report endpoints, faculty cannot review another department, upload type sniffed from file bytes and 2 MB limit, CSV formula cells neutralised, reports verified-only.
+Tested: no role escalation at sign-up, NoSQL operator injection rejected, token required, student cannot read another student's record/certificate, student cannot call review/admin/report endpoints, a Faculty Coordinator cannot review another department, upload type sniffed from file bytes and 2 MB limit, CSV formula cells neutralised, reports verified-only.
 Implemented, not automatically tested: helmet headers/CSP, rate limiting, bcrypt hashing, JWT expiry (8h).
-Not done: HTTPS is provided by the host; no email verification, no password reset, no audit log.
+Not done: HTTPS is provided by the host; no email verification, no audit log. Password reset works by emailed link (Brevo) behind a captcha.
