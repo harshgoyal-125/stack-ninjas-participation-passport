@@ -241,7 +241,7 @@ function AdminUsers() {
   );
 }
 
-function ChangePassword({ onDone }) {
+function ChangePassword({ onDone, onCancel }) {
   const [f, setF] = useState({ current: '', next: '', again: '' }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   async function go(e) {
@@ -254,11 +254,11 @@ function ChangePassword({ onDone }) {
     <div className="overlay">
       <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="cp-t" onSubmit={go}>
         <h2 id="cp-t">Set your own password</h2>
-        <p className="muted">You are using a password given by the admin. Choose a new one (8+ characters) to continue.</p>
+        <p className="muted">{onCancel ? 'Choose a new password (8+ characters).' : 'You are using a password given by the admin. Choose a new one (8+ characters) to continue.'}</p>
         <label>Current password<input type="password" required autoComplete="current-password" onChange={set('current')} /></label>
         <label>New password<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('next')} /></label>
         <label>New password again<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('again')} /></label>
-        <Err e={err} /><button className="btn" disabled={busy}>Save and continue</button>
+        <Err e={err} /><button className="btn" disabled={busy}>Save and continue</button>{onCancel && <button type="button" className="link" onClick={onCancel}>Cancel</button>}
       </form>
     </div>
   );
@@ -300,6 +300,29 @@ function ConfirmDelete({ u, onCancel, onConfirm }) {
         <h2 id="del-t">Delete this user?</h2>
         <p className="muted">{u.name} ({u.email}, {u.role}) will be removed.{u.role === 'student' ? ' Their activities and certificates will also be deleted.' : ''} This cannot be undone.</p>
         <div className="row"><button className="ghost" autoFocus onClick={onCancel}>Cancel</button><button className="btn" onClick={onConfirm}>Delete</button></div>
+      </div>
+    </div>
+  );
+}
+
+function Avatar({ user, onLogout, onChangePw }) {
+  const [open, setOpen] = useState(false); const ref = React.useRef(null);
+  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
+  useEffect(() => {
+    const out = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const esc = (e) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', out); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', esc); };
+  }, []);
+  const rows = [['Role', user.role], ['Email', user.email], ['Department', user.department], user.year && ['Year', user.year], user.semester && ['Semester', user.semester], user.rollNo && ['Roll no', user.rollNo], user.batch && ['Batch', user.batch], user.section && ['Section', user.section], user.group && ['Group', user.group]].filter(Boolean);
+  return (
+    <div className={'avatar-wrap' + (open ? ' open' : '')} ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
+      <button className="avatar" aria-label={'Account: ' + user.name} aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(true)}>{initials}</button>
+      <div className="avatar-pop glass" role="region" aria-label="Account details">
+        <b className="ap-name">{user.name}</b>
+        <dl>{rows.map(([k, v]) => <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl>
+        <button className="ghost" onClick={() => { setOpen(false); onChangePw(); }}>Change password</button>
+        <button className="ghost" onClick={() => { setOpen(false); onLogout(); }}>Log out</button>
       </div>
     </div>
   );
@@ -371,7 +394,7 @@ function PublicView({ token }) {
 }
 
 function Main() {
-  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false);
+  const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false); const [askPw, setAskPw] = useState(false);
   useEffect(() => { if (hasToken()) api('/auth/me').then((r) => setUser(r.user)).catch(() => setToken('')).finally(() => setReady(true)); }, []);
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
   if (!user) {
@@ -386,13 +409,13 @@ function Main() {
       <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
           {staff && <>{['faculty', 'counsellor'].includes(user.role) && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
-          <span className="pill" title={user.email}>{user.name} · {user.role}</span>
-          <button className="link" onClick={() => setAskOut(true)}>Log out</button></div></header>
+          <Avatar user={user} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
       <main className="wrap" key={view}>
         {user.role === 'student' && <Student user={user} />}
         {['faculty', 'counsellor'].includes(user.role) && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
         {['admin', 'hod'].includes(user.role) && <Reports user={user} />}
       </main>
+      {askPw && <ChangePassword onCancel={() => setAskPw(false)} onDone={(u) => { setAskPw(false); setUser(u); }} />}
       {askOut && <ConfirmLogout onCancel={() => setAskOut(false)} onConfirm={() => { setAskOut(false); setToken(''); setUser(null); setView('main'); }} />}
     </div>
   );

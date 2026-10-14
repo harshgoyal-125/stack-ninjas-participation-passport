@@ -124,3 +124,15 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;
 
 .brand img{width:auto;height:46px;border-radius:0}.auth .hero3d{width:220px;height:auto;max-width:80%}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .brand img{height:58px}@media(max-width:720px){.brand img{height:56px}}
+
+.avatar-wrap{position:relative;margin-left:6px}
+.avatar{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--edge);background:linear-gradient(135deg,#8ff5ff,#b79cff);color:#10104a;font:inherit;font-weight:800;cursor:pointer;box-shadow:0 0 18px rgba(130,110,255,.5);display:grid;place-items:center;padding:0}
+.avatar-pop{position:absolute;right:0;top:calc(100% + 10px);width:min(280px,86vw);padding:16px;display:grid;gap:8px;z-index:30;opacity:0;visibility:hidden;transform:translateY(-8px) scale(.96);transform-origin:top right;transition:opacity .2s ease,transform .22s cubic-bezier(.2,1.2,.4,1),visibility .2s}
+.avatar-wrap.open .avatar-pop{opacity:1;visibility:visible;transform:none}
+.avatar-wrap::after{content:"";position:absolute;right:0;top:100%;width:100%;height:12px}
+.ap-name{font-size:1.05rem;overflow-wrap:anywhere}
+.avatar-pop dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.88rem}
+.avatar-pop dt{color:var(--muted)}.avatar-pop dd{margin:0;overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){.avatar-pop{transition:none}}
+.shell>.top{position:relative;z-index:40}
+.avatar-pop.glass{background:linear-gradient(160deg,rgba(40,30,110,.97),rgba(20,14,70,.97));backdrop-filter:none;-webkit-backdrop-filter:none}
