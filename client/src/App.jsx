@@ -34,7 +34,7 @@ function PwInput(props) {
 }
 function ThemeToggle() {
   const [t, setT] = useState(document.documentElement.dataset.theme || 'light');
-  function flip() { const n = t === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = n; try { localStorage.setItem('pp_theme', n); } catch (e) { /* private mode */ } setT(n); }
+  function flip() { const h = document.documentElement; h.classList.add('theme-fade'); setTimeout(() => h.classList.remove('theme-fade'), 500); const n = t === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = n; try { localStorage.setItem('pp_theme', n); } catch (e) { /* private mode */ } setT(n); }
   return <button type="button" className="theme-toggle" onClick={flip} aria-pressed={t === 'dark'} aria-label={t === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}>{t === 'light' ? '☾ Dark' : '☀ Light'}</button>;
 }
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }

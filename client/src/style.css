@@ -357,3 +357,24 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 [data-theme=light] .lp-copy .lead,[data-theme=light] .hero p,[data-theme=light] .muted,[data-theme=light] .small,[data-theme=light] .hero .who{color:#33325A}
 [data-theme=light] .avatar-pop.glass,[data-theme=light] .dialog.glass,[data-theme=light] .overlay .dialog{background:rgba(255,255,255,.9)!important}
 [data-theme=light] .intro{background:radial-gradient(600px 460px at 30% 35%,rgba(139,112,230,.75),transparent 70%),radial-gradient(500px 400px at 70% 65%,rgba(86,168,235,.65),transparent 70%),radial-gradient(400px 300px at 50% 80%,rgba(240,150,110,.5),transparent 70%),#D9CFF3}
+/* motion */
+@keyframes ptIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ptFade{from{opacity:0}to{opacity:1}}
+@keyframes ptPop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes ptGrowX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes ptGrowY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+main{animation:ptIn .4s cubic-bezier(.2,.7,.2,1) both}
+.card,.glass.card,.step,.role,.state,.stats>*{animation:ptIn .45s cubic-bezier(.2,.7,.2,1) both}
+.card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}.card:nth-child(4){animation-delay:.15s}.card:nth-child(n+5){animation-delay:.2s}
+.btn,.ghost,.link,.badge,.theme-toggle,input,select,textarea,.card,.step,.role,.state,.tabs button,.tab,nav a,.avatar,button{transition:background-color .22s ease,border-color .22s ease,box-shadow .25s ease,transform .22s cubic-bezier(.2,.7,.2,1),color .2s ease,opacity .2s ease}
+.btn:hover,.theme-toggle:hover{transform:translateY(-1px)}
+.btn:active,.theme-toggle:active{transform:translateY(0) scale(.98)}
+.step:hover,.role:hover,.state:hover{transform:translateY(-3px)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;transition:outline-offset .15s ease}
+.overlay{animation:ptFade .2s ease both}
+.overlay .dialog,.avatar-pop{animation:ptPop .25s cubic-bezier(.2,.7,.2,1) both}
+.bar i{transform-origin:left;animation:ptGrowX .8s cubic-bezier(.2,.7,.2,1) both}
+.col i{transform-origin:bottom;animation:ptGrowY .8s cubic-bezier(.2,.7,.2,1) both}
+.theme-fade,.theme-fade *,.theme-fade *::before,.theme-fade *::after{transition:background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease,fill .45s ease!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
