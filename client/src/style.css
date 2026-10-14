@@ -336,3 +336,24 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 [data-theme=light] .step:nth-child(3n),[data-theme=light] .role:nth-child(3n){background:linear-gradient(150deg,rgba(255,255,255,.85),rgba(187,247,208,.55))}
 [data-theme=light] .hex{background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(196,181,253,.6) 55%,rgba(167,243,208,.6))}
 [data-theme=light] .intro{background:radial-gradient(600px 460px at 30% 35%,rgba(196,181,253,.8),transparent 70%),radial-gradient(500px 400px at 70% 65%,rgba(147,210,255,.7),transparent 70%),radial-gradient(400px 300px at 50% 80%,rgba(254,205,170,.55),transparent 70%),#F6F0FF}
+/* deeper pastel + glass (light) */
+[data-theme=light]{--bg:#DDD3F5;--ink:#15122E;--muted:#403F66;--line:rgba(99,82,190,.3);--line2:rgba(99,82,190,.5);--surface:rgba(255,255,255,.5)}
+[data-theme=light] body{background:#D9CFF3!important}
+[data-theme=light] body::before{background:radial-gradient(640px 480px at 6% 4%,rgba(139,112,230,.7),transparent 65%),radial-gradient(580px 460px at 96% 6%,rgba(86,168,235,.62),transparent 65%),radial-gradient(560px 440px at 88% 92%,rgba(72,200,160,.55),transparent 65%),radial-gradient(540px 420px at 8% 94%,rgba(240,150,110,.5),transparent 65%),radial-gradient(440px 340px at 50% 50%,rgba(226,130,190,.38),transparent 70%),linear-gradient(180deg,#D8CCF2,#C9DDF3)!important}
+[data-theme=light] body::after{opacity:.14}
+[data-theme=light] .glass,[data-theme=light] .card,[data-theme=light] .vcard,[data-theme=light] .auth.card{background:linear-gradient(150deg,rgba(255,255,255,.55),rgba(255,255,255,.28));backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border:1px solid rgba(255,255,255,.7);box-shadow:0 12px 36px rgba(70,50,150,.22),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.25)}
+[data-theme=light] .top{background:rgba(236,228,252,.6)!important;backdrop-filter:blur(22px) saturate(160%)}
+[data-theme=light] .hero{background:linear-gradient(135deg,rgba(150,125,230,.5),rgba(110,180,240,.42) 55%,rgba(110,214,176,.4));backdrop-filter:blur(20px) saturate(150%);border:1px solid rgba(255,255,255,.7)}
+[data-theme=light] .banner,[data-theme=light] .cta{background:linear-gradient(120deg,rgba(150,125,230,.45),rgba(240,170,130,.35),rgba(110,180,240,.45));backdrop-filter:blur(18px)}
+[data-theme=light] .btn,[data-theme=light] .auth .btn{background:linear-gradient(135deg,#7FB0F5,#9B84E8 55%,#5FCFA8);color:#0F0C2A;border:1px solid rgba(255,255,255,.7);box-shadow:0 8px 22px rgba(80,60,170,.4),inset 0 1px 0 rgba(255,255,255,.7)}
+[data-theme=light] .btn.outline,[data-theme=light] .ghost{background:rgba(255,255,255,.45);color:var(--ink);border:1px solid var(--line2);backdrop-filter:blur(10px)}
+[data-theme=light] input,[data-theme=light] select,[data-theme=light] textarea{background:rgba(255,255,255,.72);border:1px solid var(--line2)}
+[data-theme=light] .badge{background:rgba(150,125,230,.35);color:var(--ink)}
+[data-theme=light] .step:nth-child(3n+1),[data-theme=light] .role:nth-child(3n+1){background:linear-gradient(150deg,rgba(255,255,255,.6),rgba(150,125,230,.4))}
+[data-theme=light] .step:nth-child(3n+2),[data-theme=light] .role:nth-child(3n+2){background:linear-gradient(150deg,rgba(255,255,255,.6),rgba(110,180,240,.4))}
+[data-theme=light] .step:nth-child(3n),[data-theme=light] .role:nth-child(3n){background:linear-gradient(150deg,rgba(255,255,255,.6),rgba(110,214,176,.38))}
+[data-theme=light] .hex{background:linear-gradient(145deg,rgba(255,255,255,.7),rgba(150,125,230,.55) 55%,rgba(110,214,176,.5));backdrop-filter:blur(10px)}
+[data-theme=light] .mile,[data-theme=light] .fchip{background:rgba(255,255,255,.7);backdrop-filter:blur(14px)}
+[data-theme=light] .lp-copy .lead,[data-theme=light] .hero p,[data-theme=light] .muted,[data-theme=light] .small,[data-theme=light] .hero .who{color:#33325A}
+[data-theme=light] .avatar-pop.glass,[data-theme=light] .dialog.glass,[data-theme=light] .overlay .dialog{background:rgba(255,255,255,.9)!important}
+[data-theme=light] .intro{background:radial-gradient(600px 460px at 30% 35%,rgba(139,112,230,.75),transparent 70%),radial-gradient(500px 400px at 70% 65%,rgba(86,168,235,.65),transparent 70%),radial-gradient(400px 300px at 50% 80%,rgba(240,150,110,.5),transparent 70%),#D9CFF3}
