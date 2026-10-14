@@ -459,3 +459,5 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 [data-theme=light] .wordmark em,[data-theme=light] .wordmark span,[data-theme=light] .auth-logo+*,[data-theme=light] .lp-sec h2,[data-theme=light] .lp-sec h3,[data-theme=light] .lp-sec p,[data-theme=light] .lp-sec .kicker{color:#F2F6FF}
 [data-theme=light] .wordmark em{color:#8fd3ff!important;-webkit-text-fill-color:#8fd3ff}
 [data-theme=light] .lp-sec [class*=kick],[data-theme=light] .lp-sec small{color:#9cc4ff}
+[data-theme=light] .link,[data-theme=light] a{color:#9fd0ff!important}
+[data-theme=light] .link:hover,[data-theme=light] a:hover{color:#d6ecff!important}
