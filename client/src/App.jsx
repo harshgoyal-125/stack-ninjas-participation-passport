@@ -167,8 +167,8 @@ function Landing({ onLogin }) {
 
 function Student({ user }) {
   const [list, setList] = useState([]); const [rep, setRep] = useState(null); const [form, setForm] = useState(null); const [tab, setTab] = useState('activities'); const [group, setGroup] = useState('All'); const [err, setErr] = useState('');
-  const load = () => Promise.all([api('/activities'), api('/reports/me')]).then(([a, r]) => { setList(a.activities); setRep(r); }).catch((e) => setErr(e.message));
-  useEffect(() => { const t = setTimeout(load, uq ? 250 : 0); return () => clearTimeout(t); }, [page, uq, urole]);
+  const load = () => Promise.all([api('/activities?pageSize=100'), api('/reports/me')]).then(([a, r]) => { setList(a.activities); setRep(r); }).catch((e) => setErr(e.message));
+  useEffect(() => { load(); }, []);
   if (form) return <ActivityForm initial={form === 'new' ? null : form} onDone={() => { setForm(null); load(); }} onCancel={() => setForm(null)} />;
   const GROUP = { Hackathon: 'Technical', Workshop: 'Technical', Seminar: 'Technical', Competition: 'Technical', Cultural: 'Cultural', Sports: 'Sports', Other: 'Technical' };
   const ICON = { Technical: '/img/tech.jpg', Cultural: '/img/art.jpg', Sports: '/img/sport.jpg' };
@@ -346,7 +346,7 @@ function AdminUsers() {
   const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [users, setUsers] = useState([]); const [meta, setMeta] = useState({ page: 1, pages: 1, total: 0 }); const [page, setPage] = useState(1); const [uq, setUq] = useState(''); const [urole, setUrole] = useState(''); const [del, setDel] = useState(null); const [edit, setEdit] = useState(null); const [rst, setRst] = useState(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const load = () => api('/admin/users?' + new URLSearchParams({ page, pageSize: 20, ...(uq && { q: uq }), ...(urole && { role: urole }) })).then((r) => { setUsers(r.users); setMeta({ page: r.page, pages: r.pages, total: r.total }); }).catch((x) => setErr(x.message));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { const t = setTimeout(load, uq ? 250 : 0); return () => clearTimeout(t); }, [page, uq, urole]);
   async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + roleName(r.user.role) + ': ' + r.user.email); setF(blank); e.target.reset(); load(); } catch (x) { setErr(x.message); } }
   async function remove() { const u = del; setDel(null); setErr(''); setMsg(''); try { const r = await api('/admin/users/' + u.id, { method: 'DELETE' }); setMsg('Deleted ' + u.email + (r.activitiesRemoved ? ' and ' + r.activitiesRemoved + ' record(s)' : '')); load(); } catch (x) { setErr(x.message); } }
   const stu = f.role === 'student', cou = f.role === 'coordinator';
