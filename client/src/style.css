@@ -525,3 +525,10 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 :root:root:root .chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 :root:root:root .chart-head h3{margin:0}
 :root:root:root td,:root:root:root .srow b,:root:root:root .srow p{overflow-wrap:anywhere}
+/* vibrant, gently moving background: colour layers only, moved with transform (GPU), nothing else changes */
+@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-3%,2.5%,0) scale(1.07)}100%{transform:translate3d(3%,-2%,0) scale(1.03)}}
+html body::before{inset:-14%!important;will-change:transform;animation:drift 26s ease-in-out infinite alternate!important}
+html[data-theme=dark] body::before{background:radial-gradient(640px 480px at 10% 8%,rgba(124,58,237,.55),transparent 64%),radial-gradient(600px 460px at 90% 10%,rgba(34,211,238,.42),transparent 64%),radial-gradient(620px 480px at 84% 90%,rgba(236,72,153,.34),transparent 64%),radial-gradient(560px 440px at 12% 92%,rgba(59,130,246,.42),transparent 64%),radial-gradient(420px 320px at 50% 50%,rgba(99,102,241,.22),transparent 66%)!important}
+html[data-theme=light] body::before{background:radial-gradient(700px 520px at 8% 6%,rgba(129,140,248,.9),transparent 65%),radial-gradient(640px 500px at 94% 8%,rgba(34,190,238,.78),transparent 65%),radial-gradient(620px 470px at 86% 92%,rgba(45,212,191,.66),transparent 65%),radial-gradient(580px 450px at 6% 94%,rgba(192,102,240,.62),transparent 65%),radial-gradient(440px 340px at 52% 48%,rgba(244,114,182,.34),transparent 66%),linear-gradient(180deg,#34407a,#1d2650)!important}
+@media (max-width:700px){html body::before{animation-duration:38s!important}}
+@media (prefers-reduced-motion:reduce){html body::before{animation:none!important;will-change:auto}}
