@@ -19,7 +19,7 @@ function Auth({ onAuth }) {
   return (
     <main className="center">
       <form className="glass auth" onSubmit={go}>
-        <div className="orb" aria-hidden="true" />
+        <img className="hero3d" src="/img/hero.jpg" alt="" aria-hidden="true" />
         <h1>Participation Passport</h1>
         <p className="muted">One verified record of every activity you take part in.</p>
         {mode === 'register' && <label>Full name<input required maxLength={80} onChange={set('name')} /></label>}
@@ -69,39 +69,53 @@ function ActivityForm({ initial, onDone, onCancel }) {
 }
 
 function Student({ user }) {
-  const [list, setList] = useState([]); const [rep, setRep] = useState(null); const [form, setForm] = useState(null); const [tab, setTab] = useState('activities'); const [err, setErr] = useState('');
+  const [list, setList] = useState([]); const [rep, setRep] = useState(null); const [form, setForm] = useState(null); const [tab, setTab] = useState('activities'); const [group, setGroup] = useState('All'); const [err, setErr] = useState('');
   const load = () => Promise.all([api('/activities'), api('/reports/me')]).then(([a, r]) => { setList(a.activities); setRep(r); }).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, []);
   if (form) return <ActivityForm initial={form === 'new' ? null : form} onDone={() => { setForm(null); load(); }} onCancel={() => setForm(null)} />;
+  const GROUP = { Hackathon: 'Technical', Workshop: 'Technical', Seminar: 'Technical', Competition: 'Technical', Cultural: 'Cultural', Sports: 'Sports', Other: 'Technical' };
+  const ICON = { Technical: '/img/tech.jpg', Cultural: '/img/art.jpg', Sports: '/img/sport.jpg' };
+  const shown = list.filter((a) => group === 'All' || GROUP[a.type] === group);
+  const n = (st) => list.filter((a) => a.status === st).length;
   return (
     <>
-      <section className="glass passport">
-        <div className="orb" aria-hidden="true" />
-        <p className="muted">Participation Passport</p>
-        <h2>{user.name}</h2>
-        <p className="muted">{user.department} · Year {user.year}</p>
-        <div className="big" aria-label={`${rep ? rep.verifiedCount : 0} verified activities`}>{rep ? rep.verifiedCount : '–'}<span>verified</span></div>
-        <p className="muted small">Only faculty-verified activities are counted.</p>
-        <button className="btn" onClick={() => setForm('new')}>+ Add participation</button>
+      <section className="glass hero">
+        <div>
+          <p className="eyebrow">Your campus story</p>
+          <p className="who">{user.name} · {user.department} · Year {user.year}</p>
+          <h2>Every activity.<em>One beautiful journey.</em></h2>
+          <p className="lead">Collect evidence. Track reviews. Keep your story.</p>
+          <div className="row"><button className="btn" onClick={() => setForm('new')}>+ Add participation</button><button className="ghost" onClick={() => setTab('report')}>View my passport</button></div>
+        </div>
+        <img className="art" src="/img/hero.jpg" alt="" aria-hidden="true" />
       </section>
-      <nav className="tabs" role="tablist"><button role="tab" aria-selected={tab === 'activities'} onClick={() => setTab('activities')}>Activities</button><button role="tab" aria-selected={tab === 'report'} onClick={() => setTab('report')}>My report</button></nav>
+      <section className="glass stats" aria-label="Your activity counts">
+        <div className="v"><b>{rep ? rep.verifiedCount : '–'}</b><span>✓ Verified</span></div>
+        <div className="r"><b>{n('submitted')}</b><span>⏳ In review</span></div>
+        <div className="c"><b>{n('changes_needed')}</b><span>! Needs changes</span></div>
+      </section>
+      <div className="sechead"><h2>Your activity trail</h2>
+        <div className="chips" role="group" aria-label="Filter">{['All', 'Technical', 'Cultural', 'Sports'].map((g) => <button key={g} aria-pressed={group === g} onClick={() => { setGroup(g); setTab('activities'); }}>{g}</button>)}</div></div>
       <Err e={err} />
-      {tab === 'activities' && (list.length === 0 ? <p className="empty glass">No activities yet. Add your first one with its certificate.</p> : list.map((a) => (
-        <article key={a.id} className="glass card">
-          <div className="between"><h3>{a.title}</h3><Badge s={a.status} /></div>
+      {tab === 'activities' && (shown.length === 0 ? <p className="empty glass">No activities here yet. Add one with its certificate.</p> : <div className="grid">{shown.map((a) => (
+        <article key={a.id} className="glass card acard">
+          <img className="icon" src={ICON[GROUP[a.type]]} alt="" aria-hidden="true" />
+          <h3>{a.title}</h3>
           <p className="muted">{a.type} · {fmt(a.date)}{a.organizer && ' · ' + a.organizer}</p>
+          <Badge s={a.status} />
           {a.status === 'changes_needed' && <p className="note"><b>Faculty note:</b> {a.reviewNote}</p>}
           <div className="row">
             <button className="ghost" onClick={() => openBlob(`/activities/${a.id}/certificate`)}>View certificate</button>
-            {a.status === 'changes_needed' && <button className="btn small" onClick={() => setForm(a)}>Fix and resubmit</button>}
+            {a.status === 'changes_needed' && <button className="btn small" onClick={() => setForm(a)}>Update evidence</button>}
           </div>
-        </article>)))}
+        </article>))}</div>)}
       {tab === 'report' && rep && (
         <section className="glass card">
           <h3>Semester report (verified only)</h3>
           {rep.activities.length === 0 ? <p className="muted">Nothing verified yet.</p> : <table><thead><tr><th>Activity</th><th>Type</th><th>Date</th></tr></thead><tbody>{rep.activities.map((a) => <tr key={a.id}><td>{a.title}</td><td>{a.type}</td><td>{fmt(a.date)}</td></tr>)}</tbody></table>}
           <button className="ghost" onClick={() => window.print()}>Print / save as PDF</button>
         </section>)}
+      <section className="glass banner"><div><h2>Your semester, ready to share.</h2><p className="muted">Build a report from verified activities.</p></div><button className="btn" onClick={() => { setTab('report'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Preview report</button></section>
     </>
   );
 }
@@ -182,8 +196,10 @@ export default function App() {
   const staff = user.role !== 'student';
   return (
     <div className="shell">
-      <header className="top glass"><b>Participation Passport</b><span className="muted">{user.name} · {user.role}</span>
-        <div>{staff && <>{user.role === 'faculty' && <button className="link" onClick={() => setView('main')}>Review</button>}<button className="link" onClick={() => setView('reports')}>Reports</button></>}
+      <header className="top glass"><div className="brand"><img src="/img/hero.jpg" alt="" aria-hidden="true" /><span>Participation<br />Passport</span></div>
+        <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
+          {staff && <>{user.role === 'faculty' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || user.role === 'admin' ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
+          <span className="pill" title={user.email}>{user.name} · {user.role}</span>
           <button className="link" onClick={() => { setToken(''); setUser(null); }}>Log out</button></div></header>
       <main className="wrap">
         {user.role === 'student' && <Student user={user} />}
