@@ -1,0 +1,10 @@
+{
+  "name": "participation-passport",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix client && npm run build --prefix client && npm install --omit=dev --prefix server",
+    "start": "node server/src/index.js",
+    "test": "npm test --prefix server"
+  }
+}
