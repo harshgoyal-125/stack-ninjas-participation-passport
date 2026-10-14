@@ -378,3 +378,15 @@ main{animation:ptIn .4s cubic-bezier(.2,.7,.2,1) both}
 .theme-fade,.theme-fade *,.theme-fade *::before,.theme-fade *::after{transition:background-color .45s ease,color .45s ease,border-color .45s ease,box-shadow .45s ease,fill .45s ease!important}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* hide native password reveal (Edge) */
+input[type=password]::-ms-reveal,input[type=password]::-ms-clear,input::-ms-clear{display:none!important}
+/* icy glass (light): see-through, cool tint, crisp bright edge, faint crystal sheen */
+[data-theme=light] .glass,[data-theme=light] .card,[data-theme=light] .vcard,[data-theme=light] .auth.card,[data-theme=light] .hero{background:linear-gradient(135deg,rgba(255,255,255,.5) 0%,rgba(226,246,255,.3) 45%,rgba(255,255,255,.38) 70%,rgba(214,240,255,.3) 100%);backdrop-filter:blur(18px) saturate(170%) brightness(1.04);-webkit-backdrop-filter:blur(18px) saturate(170%) brightness(1.04);border:1px solid rgba(255,255,255,.85);box-shadow:0 10px 32px rgba(60,80,170,.2),inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(190,230,255,.35),inset 0 -12px 24px rgba(200,235,255,.18)}
+[data-theme=light] .card::after,[data-theme=light] .vcard::after,[data-theme=light] .auth.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 42%,transparent 54%),repeating-linear-gradient(60deg,rgba(255,255,255,.07) 0 2px,transparent 2px 14px);opacity:.55;mix-blend-mode:soft-light}
+[data-theme=light] .card,[data-theme=light] .vcard,[data-theme=light] .auth.card{position:relative}
+[data-theme=light] .mile,[data-theme=light] .fchip{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.9);backdrop-filter:blur(14px) saturate(160%)}
+[data-theme=light] .top{background:rgba(232,244,255,.5)!important}
+[data-theme=light] .step:nth-child(3n+1),[data-theme=light] .role:nth-child(3n+1){background:linear-gradient(150deg,rgba(255,255,255,.5),rgba(150,125,230,.3))}
+[data-theme=light] .step:nth-child(3n+2),[data-theme=light] .role:nth-child(3n+2){background:linear-gradient(150deg,rgba(255,255,255,.5),rgba(110,180,240,.3))}
+[data-theme=light] .step:nth-child(3n),[data-theme=light] .role:nth-child(3n){background:linear-gradient(150deg,rgba(255,255,255,.5),rgba(110,214,176,.28))}
+[data-theme=light] .avatar-pop.glass,[data-theme=light] .dialog.glass,[data-theme=light] .overlay .dialog{background:rgba(255,255,255,.82)!important;backdrop-filter:blur(22px) saturate(170%)}
