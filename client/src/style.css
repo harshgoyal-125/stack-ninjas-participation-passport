@@ -121,3 +121,6 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px 6px;
 .brand img{border-radius:0;background:none;filter:drop-shadow(0 0 8px rgba(130,110,255,.6))}
 .auth .hero3d{border-radius:0;box-shadow:none;background:none;width:130px;height:130px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(130,110,255,.6))}
 .hero .art{mix-blend-mode:normal;-webkit-mask-image:none;mask-image:none;filter:drop-shadow(0 0 24px rgba(130,110,255,.5))}.splash .logoframe img{filter:blur(14px)}@keyframes reveal{to{opacity:1;filter:blur(0);transform:none}}
+
+.brand img{width:auto;height:46px;border-radius:0}.auth .hero3d{width:220px;height:auto;max-width:80%}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.brand img{height:58px}@media(max-width:720px){.brand img{height:56px}}

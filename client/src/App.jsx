@@ -19,8 +19,8 @@ function Auth({ onAuth, start = 'login', onBack }) {
   return (
     <main className="center">
       <form className="glass auth" onSubmit={go}>
-        <img className="hero3d" src="/img/icon.png" alt="" aria-hidden="true" />
-        <h1>CampusTrace</h1>
+        <img className="hero3d" src="/img/logo.png" alt="CampusTrace" />
+        <h1 className="sr">CampusTrace</h1>
         <p className="muted">One verified record of every activity you take part in.</p>
         {mode === 'register' && <label>Full name<input required maxLength={80} onChange={set('name')} /></label>}
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
@@ -84,7 +84,7 @@ function Landing({ onLogin, onRegister }) {
   const who = [['Students', 'One personal record of every activity, with a clear status on each.'], ['Faculty', 'A review inbox with the certificate beside the record.'], ['Admin', 'Verified participation by department and type, with CSV export.']];
   return (
     <div className="shell landing">
-      <header className="top glass"><div className="brand"><img src="/img/icon.png" alt="" aria-hidden="true" /><span>CampusTrace</span></div>
+      <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
         <div className="navlinks"><button className="link" onClick={onRegister}>Create student account</button><button className="btn small" onClick={onLogin}>Login</button></div></header>
       <main className="wrap">
         <section className="glass hero">
@@ -254,7 +254,7 @@ export default function App() {
   const staff = user.role !== 'student';
   return (
     <div className="shell">
-      <header className="top glass"><div className="brand"><img src="/img/icon.png" alt="" aria-hidden="true" /><span>CampusTrace</span></div>
+      <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
         <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
           {staff && <>{user.role === 'faculty' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || user.role === 'admin' ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <span className="pill" title={user.email}>{user.name} · {user.role}</span>
