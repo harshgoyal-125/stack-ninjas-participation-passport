@@ -7,7 +7,7 @@ const { requireAuth, requireRole, isId } = require('../middleware');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024, files: 1 } });
 const MAX_ROWS = 200;
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
-const ROLES = ['student', 'faculty', 'counsellor', 'hod', 'admin'];
+const ROLES = ['student', 'coordinator', 'hod', 'admin'];
 const view = (u) => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department, year: u.year, semester: u.semester, enrollmentNo: u.enrollmentNo, rollNo: u.rollNo, batch: u.batch, section: u.section, group: u.group, demo: !!u.demo, createdAt: u.createdAt });
 router.use(requireAuth, requireRole('admin'));
 
@@ -15,7 +15,7 @@ router.use(requireAuth, requireRole('admin'));
 router.post('/users', async (req, res, next) => {
   try {
     const b = req.body;
-    const name = str(b.name), email = str(b.email).toLowerCase(), password = str(b.password), role = str(b.role), department = str(b.department);
+    const name = str(b.name), email = str(b.email).toLowerCase(), password = str(b.password), role = (['faculty', 'counsellor'].includes(str(b.role)) ? 'coordinator' : str(b.role)), department = str(b.department);
     if (!ROLES.includes(role)) return res.status(400).json({ error: 'Role must be one of ' + ROLES.join(', ') });
     if (!name || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8 || password.length > 72 || !User.DEPARTMENTS.includes(department)) return res.status(400).json({ error: 'Invalid details' });
     const doc = { name, email, passwordHash: await bcrypt.hash(password, 10), role, department, demo: b.demo === true, mustChangePassword: true };

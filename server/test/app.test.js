@@ -52,13 +52,13 @@ test('student cannot call review endpoint or admin endpoints', async () => {
 });
 test('faculty cannot review another department', async () => {
   const a = (await reg('a@a.com', 'IT')).token; const id = (await submit(a)).body.activity.id;
-  const ece = await mk('faculty', 'f1@a.com', 'ECE');
+  const ece = await mk('coordinator', 'f1@a.com', 'ECE');
   expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + ece).send({ decision: 'verify' })).status).toBe(404);
-  const it = await mk('faculty', 'f2@a.com', 'IT');
+  const it = await mk('coordinator', 'f2@a.com', 'IT');
   expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + it).send({ decision: 'verify' })).status).toBe(200);
 });
 test('changes_needed requires a reason; resubmit flow; report counts verified only', async () => {
-  const a = (await reg('a@a.com')).token; const f = await mk('faculty', 'f@a.com', 'IT');
+  const a = (await reg('a@a.com')).token; const f = await mk('coordinator', 'f@a.com', 'IT');
   const id1 = (await submit(a, { title: 'One' })).body.activity.id; const id2 = (await submit(a, { title: 'Two' })).body.activity.id; await submit(a, { title: 'Three' });
   const rv = (id, body) => request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + f).send(body);
   expect((await rv(id1, { decision: 'changes_needed' })).status).toBe(400);
@@ -78,7 +78,7 @@ test('uploads: reject fake type, no file and oversized; accept png', async () =>
   expect((await submit(a, {}, PNG, 'c.png')).status).toBe(201);
 });
 test('summary and CSV export are verified-only, and neutralise formula cells', async () => {
-  const a = (await reg('a@a.com')).token; const f = await mk('faculty', 'f@a.com', 'IT');
+  const a = (await reg('a@a.com')).token; const f = await mk('coordinator', 'f@a.com', 'IT');
   const id = (await submit(a, { title: '=HYPERLINK("x")' })).body.activity.id; await submit(a, { title: 'Pending' });
   await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + f).send({ decision: 'verify' });
   const csv = await request(app).get('/api/reports/export.csv').set('Authorization', 'Bearer ' + f);
@@ -88,7 +88,7 @@ test('summary and CSV export are verified-only, and neutralise formula cells', a
 });
 test('only admin can create faculty', async () => {
   const admin = await mk('admin', 'ad@a.com', 'CSE');
-  const r = await request(app).post('/api/admin/users').set('Authorization', 'Bearer ' + admin).send({ name: 'F', email: 'ff@a.com', password: 'password123', role: 'faculty', department: 'IT' });
+  const r = await request(app).post('/api/admin/users').set('Authorization', 'Bearer ' + admin).send({ name: 'F', email: 'ff@a.com', password: 'password123', role: 'coordinator', department: 'IT' });
   expect(r.status).toBe(201);
 });
 
@@ -96,7 +96,7 @@ describe('admin user management', () => {
   const adm = async (email = 'ad@a.com') => mk('admin', email, 'CSE');
   const post = (t, body) => request(app).post('/api/admin/users').set('Authorization', 'Bearer ' + t).send(body);
   test('only admin can list, create or delete users', async () => {
-    const st = (await reg('s@a.com')).token, fa = await mk('faculty', 'f@a.com', 'IT'), co = await mk('counsellor', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT');
+    const st = (await reg('s@a.com')).token, fa = await mk('coordinator', 'f@a.com', 'IT'), co = await mk('coordinator', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT');
     for (const t of [st, fa, co, ho]) {
       expect((await request(app).get('/api/admin/users').set('Authorization', 'Bearer ' + t)).status).toBe(403);
       expect((await post(t, { name: 'x', email: 'x@a.com', password: 'password123', role: 'admin', department: 'IT' })).status).toBe(403);
@@ -108,7 +108,7 @@ describe('admin user management', () => {
     const t = await adm();
     const mkU = (role, extra = {}) => post(t, { name: role, email: role + '@d.com', password: 'Str0ng-pass-1', role, department: 'IT', demo: true, ...extra });
     expect((await mkU('student', { year: 2, rollNo: '21IT01', group: 'G1' })).status).toBe(201);
-    expect((await mkU('counsellor', { batch: '2022', section: 'A', group: 'G1' })).status).toBe(201);
+    expect((await mkU('coordinator', { batch: '2022', section: 'A', group: 'G1' })).status).toBe(201);
     expect((await mkU('hod')).status).toBe(201);
     expect((await mkU('student', { email: 'bad@d.com', year: 9 })).status).toBe(400);
     expect((await mkU('student', { year: 2 })).status).toBe(409);
@@ -145,7 +145,7 @@ describe('admin user management', () => {
   });
   test('counsellor reviews own department; hod can read reports but not review', async () => {
     const st = await reg('s@a.com', 'IT'); const id = (await submit(st.token)).body.activity.id;
-    const co = await mk('counsellor', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT'), coOther = await mk('counsellor', 'c2@a.com', 'ECE');
+    const co = await mk('coordinator', 'c@a.com', 'IT'), ho = await mk('hod', 'h@a.com', 'IT'), coOther = await mk('coordinator', 'c2@a.com', 'ECE');
     expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + coOther).send({ decision: 'verify' })).status).toBe(404);
     expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + ho).send({ decision: 'verify' })).status).toBe(403);
     expect((await request(app).get('/api/reports/summary').set('Authorization', 'Bearer ' + ho)).status).toBe(200);
@@ -196,7 +196,7 @@ describe('first login, CSV import, counsellor scope', () => {
     const mkS = (email, group) => User.create({ name: email, email, passwordHash: bcrypt.hashSync('password123', 4), role: 'student', department: 'IT', year: 2, batch: '2024', section: 'A', group }).then(async () => (await request(app).post('/api/auth/login').send({ email, password: 'password123' })).body.token);
     const s1 = await mkS('s1@a.com', 'G1'), s2 = await mkS('s2@a.com', 'G2');
     const id1 = (await submit(s1, { title: 'One' })).body.activity.id, id2 = (await submit(s2, { title: 'Two' })).body.activity.id;
-    await User.create({ name: 'c', email: 'c@a.com', passwordHash: bcrypt.hashSync('password123', 4), role: 'counsellor', department: 'IT', batch: '2024', section: 'A', group: 'G1' });
+    await User.create({ name: 'c', email: 'c@a.com', passwordHash: bcrypt.hashSync('password123', 4), role: 'coordinator', department: 'IT', batch: '2024', section: 'A', group: 'G1' });
     const c = (await request(app).post('/api/auth/login').send({ email: 'c@a.com', password: 'password123' })).body.token, ho = await mk('hod', 'h@a.com', 'IT');
     const list = await request(app).get('/api/activities').set('Authorization', 'Bearer ' + c);
     expect(list.body.activities.map((a) => a.title)).toEqual(['One']);
@@ -208,9 +208,9 @@ describe('first login, CSV import, counsellor scope', () => {
     expect(st.body.students.map((x) => x.name)).toEqual(['s1@a.com']);
     const H = (t) => ({ Authorization: 'Bearer ' + t });
     const an = await request(app).get('/api/reports/analytics').set(H(c));
-    expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.byEvent[0].key).toBe('One'); expect(an.body.byCounsellor).toBeUndefined();
+    expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.byEvent[0].key).toBe('One'); expect(an.body.byCoordinator).toBeUndefined();
     const anH = await request(app).get('/api/reports/analytics').set(H(ho));
-    expect(anH.body.students).toBe(2); expect(anH.body.byCounsellor.length).toBe(1); expect(anH.body.byCounsellor[0].students).toBe(1); expect(anH.body.byCounsellor[0].verified).toBe(1);
+    expect(anH.body.students).toBe(2); expect(anH.body.byCoordinator.length).toBe(1); expect(anH.body.byCoordinator[0].students).toBe(1); expect(anH.body.byCoordinator[0].verified).toBe(1);
     expect((await request(app).get('/api/reports/analytics?year=3').set(H(ho))).body.students).toBe(0);
     const sl = await request(app).get('/api/reports/student-list?q=s1').set(H(c));
     expect(sl.body.students.length).toBe(1); expect(sl.body.students[0].verified).toBe(1); expect(JSON.stringify(sl.body)).not.toMatch(/passwordHash/);
@@ -229,7 +229,7 @@ describe('public sharing', () => {
   beforeEach(async () => { await Share.deleteMany({}); });
   const verified = async (st, co, title) => { const id = (await submit(st, { title })).body.activity.id; await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + co).send({ decision: 'verify' }); return id; };
   test('sharing is off by default; profile link shows only verified items and limited details', async () => {
-    const st = await reg('s1@a.com'), co = await mk('counsellor', 'c@a.com', 'IT');
+    const st = await reg('s1@a.com'), co = await mk('coordinator', 'c@a.com', 'IT');
     const vId = await verified(st.token, co, 'Verified Hack'); await submit(st.token, { title: 'Pending Secret' });
     expect((await request(app).get('/api/public/' + 'x'.repeat(32))).status).toBe(404);
     const created = await request(app).post('/api/shares').set('Authorization', 'Bearer ' + st.token).send({ scope: 'profile' });
@@ -245,7 +245,7 @@ describe('public sharing', () => {
     expect((await request(app).get('/api/public/' + tok)).body.activities).toEqual([]);
   });
   test('single-activity link, ownership, revoke', async () => {
-    const a = await reg('a@a.com'), b = await reg('b@a.com'), co = await mk('counsellor', 'c@a.com', 'IT');
+    const a = await reg('a@a.com'), b = await reg('b@a.com'), co = await mk('coordinator', 'c@a.com', 'IT');
     const idA = await verified(a.token, co, 'A One'); await verified(a.token, co, 'A Two'); const idPending = (await submit(a.token, { title: 'A Pending' })).body.activity.id;
     const auth = (t, r) => r.set('Authorization', 'Bearer ' + t);
     expect((await auth(b.token, request(app).post('/api/shares')).send({ scope: 'activity', activityId: idA })).status).toBe(400);
@@ -341,6 +341,14 @@ describe('branch change, enrollment number, groups, DS', () => {
     expect(a.status).toBe(201); expect(a.body.user.group).toBe('G2'); expect(a.body.user.department).toBe('DS');
     expect((await request(app).post('/api/admin/users').set(H(t)).send(body({ group: 'G3' }))).status).toBe(400);
     expect((await request(app).post('/api/admin/users').set(H(t)).send(body({ group: 'A' }))).status).toBe(400);
+  });
+  test('AI is a valid branch; legacy faculty/counsellor role names become coordinator; old docs still scope the same', async () => {
+    const t = await mk('admin', 'ad@a.com', 'IT');
+    const b = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'AI', year: 1, ...extra });
+    const a = await request(app).post('/api/admin/users').set(H(t)).send(b({}));
+    expect(a.status).toBe(201); expect(a.body.user.department).toBe('AI');
+    for (const r of ['faculty', 'counsellor', 'coordinator']) { const x = await request(app).post('/api/admin/users').set(H(t)).send(b({ role: r })); expect(x.status).toBe(201); expect(x.body.user.role).toBe('coordinator'); }
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(b({ role: 'wizard' }))).status).toBe(400);
   });
   test('enrollment number is unique', async () => {
     const t = await mk('admin', 'ad@a.com', 'IT');

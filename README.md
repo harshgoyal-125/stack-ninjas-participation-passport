@@ -1,15 +1,15 @@
 # CampusTrace (SKIT021, Team Stack Ninjas)
 
-A student participation record where **an uploaded certificate is evidence, not a verified record**. Students submit, faculty verify or send back with a reason, and every report counts verified records only.
+A student participation record where **an uploaded certificate is evidence, not a verified record**. Students submit, Faculty Coordinators verify or send back with a reason, and every report counts verified records only.
 
 Stack: React (Vite) + Node/Express + MongoDB (Mongoose) + JWT. One service serves the API and the built frontend.
 
 ## Flow
-Student submits activity + certificate -> Faculty (same department) verifies or requests changes with a reason -> Student fixes and resubmits -> Reports/CSV include verified records only.
+Student submits activity + certificate -> Faculty Coordinator (same department) verifies or requests changes with a reason -> Student fixes and resubmits -> Reports/CSV include verified records only.
 
 ## Roles
 - student: public sign-up. Sees only their own records.
-- faculty / admin: created by an admin (`POST /api/admin/users`). The first admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars.
+- Faculty Coordinator, Head of Department, admin: created by an admin (`POST /api/admin/users`). The first admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars.
 
 ## Run locally
 ```

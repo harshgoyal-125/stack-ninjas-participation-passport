@@ -9,7 +9,7 @@ const Activity = require('./models/Activity');
   if (!pw || pw.length < 8) throw new Error('Set DEMO_PASSWORD (8+ chars)');
   const hash = await bcrypt.hash(pw, 10);
   const mk = (name, email, role, department, year) => User.findOneAndUpdate({ email }, { name, email, passwordHash: hash, role, department, year }, { upsert: true, new: true });
-  const f = await mk('Demo Faculty (IT)', 'demo.faculty@example.test', 'faculty', 'IT');
+  const f = await mk('Demo Faculty (IT)', 'demo.faculty@example.test', 'coordinator', 'IT');
   const s = await mk('Demo Student', 'demo.student@example.test', 'student', 'IT', 3);
   const pdf = Buffer.from('%PDF-1.4\n% synthetic demo certificate\n');
   const rows = [['Demo Hackathon (sample)', 'Hackathon', 'verified'], ['Demo Workshop (sample)', 'Workshop', 'submitted']];

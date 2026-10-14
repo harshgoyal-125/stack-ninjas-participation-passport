@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { api, setToken, hasToken, openBlob } from './api.js';
 
-const DEPTS = ['CSE', 'IT', 'DS', 'ECE', 'EE', 'ME', 'CE'];
+const ROLE_LABEL = { student: 'Student', coordinator: 'Faculty Coordinator', hod: 'Head of Department', admin: 'Admin' };
+const roleName = (r) => ROLE_LABEL[r] || r;
+const DEPTS = ['CSE', 'IT', 'DS', 'AI', 'ECE', 'EE', 'ME', 'CE'];
 const GROUPS = ['G1', 'G2'];
 const TYPES = ['Hackathon', 'Workshop', 'Seminar', 'Sports', 'Cultural', 'Competition', 'Other'];
 const STATUS = { submitted: ['Active', '⏳'], verified: ['Successful', '✓'], changes_needed: ['Failed', '!'] };
@@ -59,7 +61,7 @@ function Auth({ onAuth, onBack }) {
     <main className="center split">
       <aside className="auth-art" aria-hidden="true">
         <div className="hex"><Mark size={92} /></div>
-        <div className="mile m1"><b>Active</b><span>Waiting for your counsellor</span><i><u style={{ width: '45%' }} /></i></div>
+        <div className="mile m1"><b>Active</b><span>Waiting for your Faculty Coordinator</span><i><u style={{ width: '45%' }} /></i></div>
         <div className="mile m2"><b>Successful</b><span>Checked and verified</span><i><u style={{ width: '90%' }} /></i></div>
         <h2>Every activity.<br />One verified record.</h2>
         <p>A certificate becomes part of your record only after your college checks it.</p>
@@ -126,8 +128,8 @@ function Splash({ onDone }) {
 }
 
 function Landing({ onLogin }) {
-  const steps = [['01', 'Submit', 'A student adds an activity and uploads the certificate as proof.', 'Active', 'submitted'], ['02', 'Review', 'The batch counsellor checks it, then verifies it or sends it back with a reason.', 'Under review', 'submitted'], ['03', 'Report', 'Reports and CSV exports count verified activities only.', 'Successful', 'verified']];
-  const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Counsellors', 'Review the students in your batch, section and group, with their certificates beside each record.'], ['HODs', 'See department-wide verified participation, a per-counsellor breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
+  const steps = [['01', 'Submit', 'A student adds an activity and uploads the certificate as proof.', 'Active', 'submitted'], ['02', 'Review', 'The Faculty Coordinator checks it, then verifies it or sends it back with a reason.', 'Under review', 'submitted'], ['03', 'Report', 'Reports and CSV exports count verified activities only.', 'Successful', 'verified']];
+  const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Faculty Coordinators', 'Review the students in your batch, section and group, with their certificates beside each record.'], ['Heads of Department', 'See department-wide verified participation, a per-coordinator breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
   return (
     <div className="landing">
       <header className="top"><Logo size={36} /><div className="navlinks"><button className="btn outline small" onClick={onLogin}>Login</button></div></header>
@@ -152,7 +154,7 @@ function Landing({ onLogin }) {
           <div className="grid4">{who.map(([t, d]) => <article key={t} className="card role"><h3>{t}</h3><p className="muted">{d}</p></article>)}</div></section>
         <section className="lp-sec"><p className="eyebrow">Status words</p><h2>Every record is always in one of three states</h2>
           <div className="grid3">
-            <div className="card state ok"><b>Successful</b><span>Verified by a counsellor. Counted in reports.</span></div>
+            <div className="card state ok"><b>Successful</b><span>Verified by a Faculty Coordinator. Counted in reports.</span></div>
             <div className="card state mid"><b>Active</b><span>Submitted and waiting for review. Not counted yet.</span></div>
             <div className="card state bad"><b>Failed</b><span>Sent back with a reason. Update the proof and resubmit.</span></div>
           </div></section>
@@ -301,9 +303,9 @@ function Reports({ user }) {
       </div>
       <div className="kpis"><div className="glass kpi"><b>{an.students}</b><span>Students</span></div><div className="glass kpi"><b>{t.verified}</b><span>Verified</span></div><div className="glass kpi"><b>{t.inReview}</b><span>In review</span></div><div className="glass kpi"><b>{t.changesNeeded}</b><span>Changes needed</span></div></div>
       <div className="charts"><Bars title="By year" rows={an.byYear} /><Bars title="By type" rows={an.byType} /><MonthChart rows={an.byMonth} /><Bars title="By event name (top 10)" rows={an.byEvent} /></div>
-      {an.byCounsellor && <section className="glass card"><h3>By counsellor</h3>
-        {an.byCounsellor.length === 0 && <p className="muted">No counsellors yet.</p>}
-        <div className="tbl">{an.byCounsellor.map((c) => <div key={c.email} className="srow"><div><b>{c.name}</b><p className="muted">{c.department}{c.batch ? ' · Batch ' + c.batch : ''}{c.section ? ' · Sec ' + c.section : ''}{c.group ? ' · Grp ' + c.group : ''}</p></div><span><b>{c.verified}</b> verified · {c.students} students</span></div>)}</div></section>}
+      {an.byCoordinator && <section className="glass card"><h3>By Faculty Coordinator</h3>
+        {an.byCoordinator.length === 0 && <p className="muted">No Faculty Coordinators yet.</p>}
+        <div className="tbl">{an.byCoordinator.map((c) => <div key={c.email} className="srow"><div><b>{c.name}</b><p className="muted">{c.department}{c.batch ? ' · Batch ' + c.batch : ''}{c.section ? ' · Sec ' + c.section : ''}{c.group ? ' · Grp ' + c.group : ''}</p></div><span><b>{c.verified}</b> verified · {c.students} students</span></div>)}</div></section>}
       <section className="glass card"><h3>Students ({st.length})</h3>
         {st.length === 0 && <p className="muted">No students match.</p>}
         <div className="tbl">{st.map((x) => <button key={x.id} className="srow rowbtn" onClick={() => setOpen(x.id)}><div><b>{x.name}</b><p className="muted">{x.department}{x.year ? ' · Y' + x.year : ''}{x.semester ? ' · S' + x.semester : ''}{x.rollNo ? ' · ' + x.rollNo : ''}</p></div><span><b>{x.verified}</b> verified · {x.inReview} review · {x.changesNeeded} changes</span></button>)}</div></section>
@@ -319,9 +321,9 @@ function AdminUsers() {
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const load = () => api('/admin/users').then((r) => setUsers(r.users)).catch((x) => setErr(x.message));
   useEffect(() => { load(); }, []);
-  async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + r.user.role + ': ' + r.user.email); setF(blank); e.target.reset(); load(); } catch (x) { setErr(x.message); } }
+  async function go(e) { e.preventDefault(); setErr(''); setMsg(''); try { const r = await api('/admin/users', { method: 'POST', body: f }); setMsg('Created ' + roleName(r.user.role) + ': ' + r.user.email); setF(blank); e.target.reset(); load(); } catch (x) { setErr(x.message); } }
   async function remove() { const u = del; setDel(null); setErr(''); setMsg(''); try { const r = await api('/admin/users/' + u.id, { method: 'DELETE' }); setMsg('Deleted ' + u.email + (r.activitiesRemoved ? ' and ' + r.activitiesRemoved + ' record(s)' : '')); load(); } catch (x) { setErr(x.message); } }
-  const stu = f.role === 'student', cou = f.role === 'counsellor';
+  const stu = f.role === 'student', cou = f.role === 'coordinator';
   return (
     <>
       <form className="glass form" onSubmit={go}>
@@ -329,7 +331,7 @@ function AdminUsers() {
         <label>Name<input required onChange={set('name')} /></label>
         <label>Email<input type="email" required onChange={set('email')} /></label>
         <label>Temporary password (8+)<PwInput minLength={8} required onChange={set('password')} /></label>
-        <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'counsellor', 'hod', 'faculty', 'admin'].map((r) => <option key={r}>{r}</option>)}</select></label>
+        <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'coordinator', 'hod', 'admin'].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
           <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
         {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Enrollment number<input onChange={set('enrollmentNo')} /></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
         {(stu || cou) && <div className="row"><label>Batch<input onChange={set('batch')} /></label><label>Section<input onChange={set('section')} /></label><label>Group<select value={f.group || ''} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
@@ -339,7 +341,7 @@ function AdminUsers() {
       <CsvImport onDone={load} />
       <section className="glass card"><h3>All users ({users.length})</h3>
         <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
-          {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{u.role}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
+          {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{roleName(u.role)}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
             <td className="small">{[u.year && 'Y' + u.year, u.semester && 'Sem ' + u.semester, u.enrollmentNo && 'Enr ' + u.enrollmentNo, u.rollNo, u.batch, u.section, u.group].filter(Boolean).join(' · ')}</td>
             <td className="actions"><button className="ghost" onClick={() => setEdit(u)} aria-label={'Edit ' + u.email}>Edit</button><button className="ghost" onClick={() => setRst(u)} aria-label={'Reset password for ' + u.email}>Reset password</button><button className="ghost" onClick={() => setDel(u)} aria-label={'Delete ' + u.email}>Delete</button></td></tr>)}
         </tbody></table></div>
@@ -362,7 +364,7 @@ function EditUser({ u, onCancel, onDone }) {
         <label>Name<input required value={f.name} onChange={set('name')} /></label>
         <div className="row"><label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label>
           {u.role === 'student' && <><label>Year<select value={f.year} onChange={set('year')}><option value="">-</option>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Semester<select value={f.semester} onChange={set('semester')}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y}>{y}</option>)}</select></label></>}</div>
-        {(u.role === 'student' || u.role === 'counsellor') && <div className="row"><label>Batch<input value={f.batch} onChange={set('batch')} /></label><label>Section<input value={f.section} onChange={set('section')} /></label><label>Group<select value={f.group} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
+        {(u.role === 'student' || u.role === 'coordinator') && <div className="row"><label>Batch<input value={f.batch} onChange={set('batch')} /></label><label>Section<input value={f.section} onChange={set('section')} /></label><label>Group<select value={f.group} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
         {u.role === 'student' && <div className="row"><label>Enrollment no (never changes)<input value={f.enrollmentNo} onChange={set('enrollmentNo')} /></label><label>Roll number<input value={f.rollNo} onChange={set('rollNo')} /></label></div>}
         {u.role === 'student' && <p className="muted small">Changing branch moves the student's records to the new branch. Enrollment number stays the same.</p>}
         <Err e={err} />
@@ -480,7 +482,7 @@ function ConfirmDelete({ u, onCancel, onConfirm }) {
     <div className="overlay" onClick={onCancel}>
       <div className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="del-t" onClick={(e) => e.stopPropagation()}>
         <h2 id="del-t">Delete this user?</h2>
-        <p className="muted">{u.name} ({u.email}, {u.role}) will be removed.{u.role === 'student' ? ' Their activities and certificates will also be deleted.' : ''} This cannot be undone.</p>
+        <p className="muted">{u.name} ({u.email}, {roleName(u.role)}) will be removed.{u.role === 'student' ? ' Their activities and certificates will also be deleted.' : ''} This cannot be undone.</p>
         <div className="row"><button className="ghost" autoFocus onClick={onCancel}>Cancel</button><button className="btn" onClick={onConfirm}>Delete</button></div>
       </div>
     </div>
@@ -496,7 +498,7 @@ function Avatar({ user, onLogout, onChangePw, onProfile }) {
     document.addEventListener('pointerdown', out); document.addEventListener('keydown', esc);
     return () => { document.removeEventListener('pointerdown', out); document.removeEventListener('keydown', esc); };
   }, []);
-  const rows = [['Role', user.role], ['Email', user.email], ['Department', user.department], user.year && ['Year', user.year], user.semester && ['Semester', user.semester], user.enrollmentNo && ['Enrollment no', user.enrollmentNo], user.rollNo && ['Roll no', user.rollNo], user.batch && ['Batch', user.batch], user.section && ['Section', user.section], user.group && ['Group', user.group]].filter(Boolean);
+  const rows = [['Role', roleName(user.role)], ['Email', user.email], ['Department', user.department], user.year && ['Year', user.year], user.semester && ['Semester', user.semester], user.enrollmentNo && ['Enrollment no', user.enrollmentNo], user.rollNo && ['Roll no', user.rollNo], user.batch && ['Batch', user.batch], user.section && ['Section', user.section], user.group && ['Group', user.group]].filter(Boolean);
   return (
     <div className={'avatar-wrap' + (open ? ' open' : '')} ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
       <button className="avatar" aria-label={'Account: ' + user.name} aria-haspopup="true" aria-expanded={open} onClick={() => { setOpen(false); onProfile && onProfile(); }}>{initials}</button>
@@ -515,13 +517,13 @@ function Profile({ user, onBack, onChangePw, onLogout }) {
   useEffect(() => { api('/activities').then((r) => setActs(r.activities)).catch((e) => setErr(e.message)); }, []);
   const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
   const cnt = (st) => (acts || []).filter((a) => a.status === st).length;
-  const rows = [['Name', user.name], ['Email', user.email], ['Role', user.role], ['Department', user.department], ['Year', user.year], ['Semester', user.semester], ['Enrollment no', user.enrollmentNo], ['Roll no', user.rollNo], ['Batch', user.batch], ['Section', user.section], ['Group', user.group]].filter(([, v]) => v);
-  const isStu = user.role === 'student'; const isCou = ['counsellor', 'faculty'].includes(user.role);
+  const rows = [['Name', user.name], ['Email', user.email], ['Role', roleName(user.role)], ['Department', user.department], ['Year', user.year], ['Semester', user.semester], ['Enrollment no', user.enrollmentNo], ['Roll no', user.rollNo], ['Batch', user.batch], ['Section', user.section], ['Group', user.group]].filter(([, v]) => v);
+  const isStu = user.role === 'student'; const isCou = user.role === 'coordinator';
   const scope = isCou ? 'You review students of ' + user.department + [user.batch && ' batch ' + user.batch, user.section && 'section ' + user.section, user.group && 'group ' + user.group].filter(Boolean).map((x, i) => (i ? ', ' : ' · ') + x).join('') + '.' : user.role === 'hod' ? 'You see every student in ' + user.department + '.' : 'You see every department.';
   return (
     <>
       <section className="glass hero prof-hero"><div className="prof-av" aria-hidden="true">{initials}</div>
-        <div><p className="eyebrow">My profile</p><h2>{user.name}</h2><p className="lead">{user.email}</p><p className="muted small">{isStu ? 'Student' : user.role} · {user.department}</p></div></section>
+        <div><p className="eyebrow">My profile</p><h2>{user.name}</h2><p className="lead">{user.email}</p><p className="muted small">{roleName(user.role)} · {user.department}</p></div></section>
       <div className="prof-grid">
         <section className="glass card"><h3>Details</h3><dl className="prof-dl">{rows.map(([k, v]) => <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl></section>
         <section className="glass card"><h3>{isStu ? 'My activity status' : isCou ? 'Review summary' : 'Activity summary'}</h3>
@@ -616,12 +618,12 @@ function Main() {
     <div className="shell">
       <header className="top"><Logo size={34} />
         <div className="navlinks">{!staff && <><button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => { setView('main'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</button></>}
-          {staff && <>{['faculty', 'counsellor'].includes(user.role) && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
+          {staff && <>{user.role === 'coordinator' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <Avatar user={user} onProfile={() => setView('profile')} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
       <main className="wrap" key={view}>
         {view === 'profile' && <Profile user={user} onBack={() => setView('main')} onChangePw={() => setAskPw(true)} onLogout={() => setAskOut(true)} />}
         {view !== 'profile' && user.role === 'student' && <Student user={user} />}
-        {view !== 'profile' && ['faculty', 'counsellor'].includes(user.role) && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
+        {view !== 'profile' && user.role === 'coordinator' && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
         {view !== 'profile' && ['admin', 'hod'].includes(user.role) && <Reports user={user} />}
       </main>
       {askPw && <ChangePassword onCancel={() => setAskPw(false)} onDone={(u) => { setAskPw(false); setUser(u); }} />}

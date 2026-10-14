@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const DEPARTMENTS = ['CSE', 'IT', 'DS', 'ECE', 'EE', 'ME', 'CE'];
+const DEPARTMENTS = ['CSE', 'IT', 'DS', 'AI', 'ECE', 'EE', 'ME', 'CE'];
 const schema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 80 },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 120 },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['student', 'faculty', 'counsellor', 'hod', 'admin'], default: 'student' },
+  role: { type: String, enum: ['student', 'coordinator', 'hod', 'admin'], default: 'student' },
   department: { type: String, enum: DEPARTMENTS, required: true },
   year: { type: Number, min: 1, max: 4 },
   semester: { type: Number, min: 1, max: 8 },

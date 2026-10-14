@@ -80,8 +80,8 @@ router.get('/:id/certificate', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Faculty decision. Only faculty of the same department (enforced by scopeFilter).
-router.post('/:id/review', requireRole('faculty', 'counsellor'), async (req, res, next) => {
+// Faculty Coordinator decision. Only faculty of the same department (enforced by scopeFilter).
+router.post('/:id/review', requireRole('coordinator'), async (req, res, next) => {
   try {
     const a = await loadScoped(req, res); if (!a) return;
     const decision = str(req.body.decision), note = str(req.body.note).slice(0, 400);

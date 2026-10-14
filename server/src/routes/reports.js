@@ -19,7 +19,7 @@ router.get('/me', requireRole('student'), async (req, res, next) => {
     res.json({ verifiedCount: rows.length, byType, activities: rows.map((a) => ({ id: a._id, title: a.title, type: a.type, organizer: a.organizer, date: a.date })) });
   } catch (e) { next(e); }
 });
-router.get('/summary', requireRole('faculty', 'counsellor', 'hod', 'admin'), async (req, res, next) => {
+router.get('/summary', requireRole('coordinator', 'hod', 'admin'), async (req, res, next) => {
   try {
     const match = { status: 'verified', ...(await activityScope(req.user)) };
     const [byDept, byType, pending] = await Promise.all([
@@ -30,7 +30,7 @@ router.get('/summary', requireRole('faculty', 'counsellor', 'hod', 'admin'), asy
     res.json({ verifiedByDepartment: byDept.map((x) => ({ department: x._id, count: x.count })), verifiedByType: byType.map((x) => ({ type: x._id, count: x.count })), pendingReview: pending });
   } catch (e) { next(e); }
 });
-router.get('/export.csv', requireRole('faculty', 'counsellor', 'hod', 'admin'), async (req, res, next) => {
+router.get('/export.csv', requireRole('coordinator', 'hod', 'admin'), async (req, res, next) => {
   try {
     const match = { status: 'verified', ...(await activityScope(req.user)) };
     const rows = await Activity.find(match).populate('student', 'name year').sort({ date: -1 }).limit(5000);
@@ -38,7 +38,7 @@ router.get('/export.csv', requireRole('faculty', 'counsellor', 'hod', 'admin'), 
     res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="verified-participation.csv"' }).send(lines.join('\n'));
   } catch (e) { next(e); }
 });
-router.get('/students', requireRole('faculty', 'counsellor', 'hod', 'admin'), async (req, res, next) => {
+router.get('/students', requireRole('coordinator', 'hod', 'admin'), async (req, res, next) => {
   try {
     const match = { status: 'verified', ...(await activityScope(req.user)) };
     const g = await Activity.aggregate([{ $match: match }, { $group: { _id: '$student', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 50 }]);
@@ -47,7 +47,7 @@ router.get('/students', requireRole('faculty', 'counsellor', 'hod', 'admin'), as
     res.json({ students: g.map((x) => ({ name: m.get(String(x._id))?.name, department: m.get(String(x._id))?.department, year: m.get(String(x._id))?.year, verifiedCount: x.count })) });
   } catch (e) { next(e); }
 });
-const STAFF = ['faculty', 'counsellor', 'hod', 'admin'];
+const STAFF = ['coordinator', 'hod', 'admin'];
 // Charts data: verified records only, inside the caller's scope. Optional year/semester filter.
 router.get('/analytics', requireRole(...STAFF), async (req, res, next) => {
   try {
@@ -69,14 +69,14 @@ router.get('/analytics', requireRole(...STAFF), async (req, res, next) => {
       byEvent: list(tally(ver, (a) => a.title), (a, b) => b.count - a.count).slice(0, 10),
     };
     if (req.user.role === 'hod' || req.user.role === 'admin') {
-      const cq = { role: 'counsellor' }; if (req.user.role === 'hod') cq.department = req.user.department;
+      const cq = { role: 'coordinator' }; if (req.user.role === 'hod') cq.department = req.user.department;
       const cs = await User.find(cq).select('name email role department batch section group');
-      out.byCounsellor = [];
+      out.byCoordinator = [];
       for (const c of cs) {
         const q = await studentQuery(c);
         const sids = await User.find(q).distinct('_id');
         const n = await Activity.countDocuments({ status: 'verified', department: c.department, student: { $in: sids } });
-        out.byCounsellor.push({ name: c.name, email: c.email, department: c.department, batch: c.batch || '', section: c.section || '', group: c.group || '', students: sids.length, verified: n });
+        out.byCoordinator.push({ name: c.name, email: c.email, department: c.department, batch: c.batch || '', section: c.section || '', group: c.group || '', students: sids.length, verified: n });
       }
     }
     res.json(out);
