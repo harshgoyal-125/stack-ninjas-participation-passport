@@ -13,6 +13,8 @@ const schema = new mongoose.Schema({
   section: { type: String, trim: true, maxlength: 10 },
   group: { type: String, trim: true, maxlength: 10 },
   demo: { type: Boolean, default: false },
+  mustChangePassword: { type: Boolean, default: false },
 }, { timestamps: true });
+schema.index({ rollNo: 1 }, { unique: true, partialFilterExpression: { rollNo: { $type: 'string' } } });
 module.exports = mongoose.model('User', schema);
 module.exports.DEPARTMENTS = DEPARTMENTS;

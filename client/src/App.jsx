@@ -3,18 +3,18 @@ import { api, setToken, hasToken, openBlob } from './api.js';
 
 const DEPTS = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE'];
 const TYPES = ['Hackathon', 'Workshop', 'Seminar', 'Sports', 'Cultural', 'Competition', 'Other'];
-const STATUS = { submitted: ['In review', '⏳'], verified: ['Verified', '✓'], changes_needed: ['Changes needed', '!'] };
+const STATUS = { submitted: ['Active', '⏳'], verified: ['Successful', '✓'], changes_needed: ['Failed', '!'] };
 const fmt = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
 function Badge({ s }) { const [t, i] = STATUS[s]; return <span className={'badge ' + s}><b aria-hidden="true">{i}</b> {t}</span>; }
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
-function Auth({ onAuth, start = 'login', onBack }) {
-  const [mode, setMode] = useState(start); const [f, setF] = useState({ department: 'IT', year: 3 }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+function Auth({ onAuth, onBack }) {
+  const [f, setF] = useState({}); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   async function go(e) {
     e.preventDefault(); setErr(''); setBusy(true);
-    try { const r = await api('/auth/' + mode, { method: 'POST', body: f }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+    try { const r = await api('/auth/login', { method: 'POST', body: f }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); } finally { setBusy(false); }
   }
   return (
     <main className="center">
@@ -22,18 +22,12 @@ function Auth({ onAuth, start = 'login', onBack }) {
         <img className="hero3d" src="/img/logo.png" alt="CampusTrace" />
         <h1 className="sr">CampusTrace</h1>
         <p className="muted">One verified record of every activity you take part in.</p>
-        {mode === 'register' && <label>Full name<input required maxLength={80} onChange={set('name')} /></label>}
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
-        <label>Password<input type="password" required minLength={mode === 'register' ? 8 : 1} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} onChange={set('password')} /></label>
-        {mode === 'register' && <div className="row">
-          <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label>
-          <label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((d) => <option key={d}>{d}</option>)}</select></label>
-        </div>}
+        <label>Password<input type="password" required autoComplete="current-password" onChange={set('password')} /></label>
         <Err e={err} />
-        <button className="btn" disabled={busy}>{mode === 'login' ? 'Log in' : 'Create student account'}</button>
+        <button className="btn" disabled={busy}>Log in</button>
+        <p className="muted small" style={{ textAlign: "center" }}>Accounts are created by your college administrator.</p>
         {onBack && <button type="button" className="link" onClick={onBack}>← Back to home</button>}
-        <button type="button" className="link" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr(''); }}>{mode === 'login' ? 'New student? Create an account' : 'Have an account? Log in'}</button>
-        {mode === 'register' && <p className="muted small">Faculty and admin accounts are created by an administrator.</p>}
       </form>
     </main>
   );
@@ -79,19 +73,19 @@ function Splash({ onDone }) {
   );
 }
 
-function Landing({ onLogin, onRegister }) {
+function Landing({ onLogin }) {
   const steps = [['1', 'Submit', 'A student adds an activity and uploads the certificate as evidence.'], ['2', 'Review', 'A faculty member from the same department checks it and verifies it, or sends it back with a reason.'], ['3', 'Report', 'Reports and exports count verified activities only.']];
   const who = [['Students', 'One personal record of every activity, with a clear status on each.'], ['Faculty', 'A review inbox with the certificate beside the record.'], ['Admin', 'Verified participation by department and type, with CSV export.']];
   return (
     <div className="shell landing">
       <header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div>
-        <div className="navlinks"><button className="link" onClick={onRegister}>Create student account</button><button className="btn small" onClick={onLogin}>Login</button></div></header>
+        <div className="navlinks"><button className="btn small" onClick={onLogin}>Login</button></div></header>
       <main className="wrap">
         <section className="glass hero">
           <div><p className="eyebrow">Student participation platform</p>
             <h2>Every activity.<em>One verified record.</em></h2>
             <p className="lead">An uploaded certificate is evidence, not a verified record. CampusTrace collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
-            <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>Sign up</button></div></div>
+            <div className="row"><button className="btn" onClick={onLogin}>Login</button></div></div>
           <img className="art logo" src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" />
         </section>
         <h2 className="sec">How it works</h2>
@@ -101,7 +95,7 @@ function Landing({ onLogin, onRegister }) {
         <section className="glass stats" aria-label="Status words">
           <div className="v"><b>✓</b><span>Verified</span></div><div className="r"><b>⏳</b><span>In review</span></div><div className="c"><b>!</b><span>Changes needed</span></div>
         </section>
-        <section className="glass banner"><div><h2>Ready to build your record?</h2><p className="muted">Faculty and admin accounts are created by an administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
+        <section className="glass banner"><div><h2>Ready to build your record?</h2><p className="muted">Accounts are created by your college administrator.</p></div><button className="btn" onClick={onLogin}>Login</button></section>
       </main>
     </div>
   );
@@ -129,9 +123,9 @@ function Student({ user }) {
         <img className="art" src="/img/logo.png" alt="" aria-hidden="true" />
       </section>
       <section className="glass stats" aria-label="Your activity counts">
-        <div className="v"><b>{rep ? rep.verifiedCount : '–'}</b><span>✓ Verified</span></div>
-        <div className="r"><b>{n('submitted')}</b><span>⏳ In review</span></div>
-        <div className="c"><b>{n('changes_needed')}</b><span>! Needs changes</span></div>
+        <div className="v"><b>{rep ? rep.verifiedCount : '–'}</b><span>✓ Successful</span></div>
+        <div className="r"><b>{n('submitted')}</b><span>⏳ Active</span></div>
+        <div className="c"><b>{n('changes_needed')}</b><span>! Failed</span></div>
       </section>
       <div className="sechead"><h2>Your activity trail</h2>
         <div className="chips" role="group" aria-label="Filter">{['All', 'Technical', 'Cultural', 'Sports'].map((g) => <button key={g} aria-pressed={group === g} onClick={() => { setGroup(g); setTab('activities'); }}>{g}</button>)}</div></div>
@@ -232,6 +226,7 @@ function AdminUsers() {
         <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
         <button className="btn">Create</button>
       </form>
+      <CsvImport onDone={load} />
       <section className="glass card"><h3>All users ({users.length})</h3>
         <div style={{ overflowX: 'auto' }}><table><thead><tr><th>Name</th><th>Role</th><th>Dept</th><th>Details</th><th></th></tr></thead><tbody>
           {users.map((u) => <tr key={u.id}><td>{u.name}<br /><span className="muted small">{u.email}</span></td><td>{u.role}{u.demo ? ' (demo)' : ''}</td><td>{u.department}</td>
@@ -241,6 +236,50 @@ function AdminUsers() {
       </section>
       {del && <ConfirmDelete u={del} onCancel={() => setDel(null)} onConfirm={remove} />}
     </>
+  );
+}
+
+function ChangePassword({ onDone }) {
+  const [f, setF] = useState({ current: '', next: '', again: '' }); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  async function go(e) {
+    e.preventDefault(); setErr('');
+    if (f.next !== f.again) return setErr('The two new passwords do not match');
+    setBusy(true);
+    try { const r = await api('/auth/change-password', { method: 'POST', body: { current: f.current, next: f.next } }); setToken(r.token); onDone(r.user); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+  }
+  return (
+    <div className="overlay">
+      <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="cp-t" onSubmit={go}>
+        <h2 id="cp-t">Set your own password</h2>
+        <p className="muted">You are using a password given by the admin. Choose a new one (8+ characters) to continue.</p>
+        <label>Current password<input type="password" required autoComplete="current-password" onChange={set('current')} /></label>
+        <label>New password<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('next')} /></label>
+        <label>New password again<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('again')} /></label>
+        <Err e={err} /><button className="btn" disabled={busy}>Save and continue</button>
+      </form>
+    </div>
+  );
+}
+
+function CsvImport({ onDone }) {
+  const [res, setRes] = useState(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  async function go(e) {
+    e.preventDefault(); setErr(''); setRes(null);
+    const file = e.target.elements.file.files[0]; if (!file) return setErr('Choose a CSV file');
+    const form = new FormData(); form.append('file', file); setBusy(true);
+    try { const r = await api('/admin/users/import', { method: 'POST', form }); setRes(r); onDone(); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+  }
+  return (
+    <form className="glass form" onSubmit={go}>
+      <h3>Import students from CSV</h3>
+      <p className="muted small">Columns: name, branch, year, semester, email, initial password, group, roll number (optional: batch, section). Max 200 rows. Good rows are created; bad rows are listed below. Students must change the password at first login.</p>
+      <input type="file" name="file" accept=".csv,text/csv" />
+      <Err e={err} />
+      {res && <div role="status"><p className="ok">Created {res.created} student(s). {res.failed.length} row(s) skipped.</p>
+        {res.failed.map((f) => <p key={f.row} className="muted small">Row {f.row} {f.email}: {f.error}</p>)}</div>}
+      <button className="btn" disabled={busy}>{busy ? 'Importing…' : 'Import'}</button>
+    </form>
   );
 }
 
@@ -278,9 +317,10 @@ export default function App() {
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
   if (!user) {
     if (!seen) return <Splash onDone={() => { sessionStorage.setItem('pp_seen', '1'); setSeen(true); }} />;
-    if (!auth) return <Landing onLogin={() => setAuth('login')} onRegister={() => setAuth('register')} />;
-    return <Auth onAuth={setUser} start={auth} onBack={() => setAuth('')} />;
+    if (!auth) return <Landing onLogin={() => setAuth('login')} />;
+    return <Auth onAuth={setUser} onBack={() => setAuth('')} />;
   }
+  if (user.mustChangePassword) return <ChangePassword onDone={setUser} />;
   const staff = user.role !== 'student';
   return (
     <div className="shell">

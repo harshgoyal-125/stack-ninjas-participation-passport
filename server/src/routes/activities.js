@@ -35,15 +35,10 @@ function cert(file) {
 }
 const up = (req, res, next) => upload.single('certificate')(req, res, next);
 
-// Scope: student -> own; faculty -> own department; admin -> all.
-function scopeFilter(user) {
-  if (user.role === 'student') return { student: user._id };
-  if (['faculty', 'counsellor', 'hod'].includes(user.role)) return { department: user.department };
-  return {};
-}
+const { activityScope } = require('../scope');
 async function loadScoped(req, res, select) {
   if (!isId(req.params.id)) { res.status(404).json({ error: 'Not found' }); return null; }
-  let q = Activity.findOne({ _id: req.params.id, ...scopeFilter(req.user) });
+  let q = Activity.findOne({ _id: req.params.id, ...(await activityScope(req.user)) });
   if (select) q = q.select(select);
   const a = await q;
   if (!a) { res.status(404).json({ error: 'Not found' }); return null; } // 404, not 403: do not reveal other records exist
@@ -63,7 +58,7 @@ router.post('/', requireRole('student'), up, async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const filter = scopeFilter(req.user);
+    const filter = await activityScope(req.user);
     const status = str(req.query.status), type = str(req.query.type), q = str(req.query.q);
     if (status) { if (!['submitted', 'verified', 'changes_needed'].includes(status)) return res.status(400).json({ error: 'Bad status' }); filter.status = status; }
     if (type) { if (!Activity.TYPES.includes(type)) return res.status(400).json({ error: 'Bad type' }); filter.type = type; }

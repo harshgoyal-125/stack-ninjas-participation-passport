@@ -16,6 +16,7 @@ async function requireAuth(req, res, next) {
     const user = await User.findById(p.sub);
     if (!user) return res.status(401).json({ error: 'Login required' });
     req.user = user;
+    if (user.mustChangePassword && !req.originalUrl.startsWith('/api/auth/')) return res.status(403).json({ error: 'Change your password first', code: 'PASSWORD_CHANGE_REQUIRED' });
     next();
   } catch (e) {
     if (e.name === 'JsonWebTokenError' || e.name === 'TokenExpiredError') return res.status(401).json({ error: 'Login required' });

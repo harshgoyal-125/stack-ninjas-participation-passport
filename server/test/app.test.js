@@ -15,16 +15,16 @@ beforeAll(async () => { if (process.env.TEST_MONGO_URI) { await mongoose.connect
 afterAll(async () => { await mongoose.disconnect(); if (mem) await mem.stop(); });
 beforeEach(async () => { await User.deleteMany({}); await Activity.deleteMany({}); });
 
-const reg = async (email, dept = 'IT') => (await request(app).post('/api/auth/register').send({ name: email.split('@')[0], email, password: 'password123', department: dept, year: 3 })).body;
+const reg = async (email, dept = 'IT') => { await User.create({ name: email.split('@')[0], email, passwordHash: await bcrypt.hash('password123', 4), role: 'student', department: dept, year: 3 }); return (await request(app).post('/api/auth/login').send({ email, password: 'password123' })).body; };
 const mk = async (role, email, dept) => { await User.create({ name: email, email, passwordHash: await bcrypt.hash('password123', 4), role, department: dept }); return (await request(app).post('/api/auth/login').send({ email, password: 'password123' })).body.token; };
 const submit = (token, extra = {}, file = PDF, name = 'c.pdf') => {
   const r = request(app).post('/api/activities').set('Authorization', 'Bearer ' + token).field('title', extra.title || 'Hack').field('type', 'Hackathon').field('date', '2026-01-10');
   return file ? r.attach('certificate', file, name) : r;
 };
 
-test('register ignores a role field and makes a student', async () => {
+test('public self sign-up no longer exists', async () => {
   const res = await request(app).post('/api/auth/register').send({ name: 'x', email: 'x@a.com', password: 'password123', department: 'IT', year: 2, role: 'admin' });
-  expect(res.status).toBe(201); expect(res.body.user.role).toBe('student');
+  expect(res.status).toBe(404); expect(await User.countDocuments()).toBe(0);
 });
 test('NoSQL operator injection in login is rejected', async () => {
   await reg('a@a.com');
@@ -150,5 +150,58 @@ describe('admin user management', () => {
     expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + ho).send({ decision: 'verify' })).status).toBe(403);
     expect((await request(app).get('/api/reports/summary').set('Authorization', 'Bearer ' + ho)).status).toBe(200);
     expect((await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + co).send({ decision: 'verify' })).status).toBe(200);
+  });
+});
+
+describe('first login, CSV import, counsellor scope', () => {
+  const H = 'name,branch,year,semester,email,initial password,group,roll number\n';
+  const imp = (t, csv) => request(app).post('/api/admin/users/import').set('Authorization', 'Bearer ' + t).attach('file', Buffer.from(csv), 'students.csv');
+  test('CSV import: good rows in, bad rows listed, no passwords echoed, hashed, forced change', async () => {
+    const t = await mk('admin', 'ad@a.com', 'CSE');
+    await User.create({ name: 'old', email: 'dup@a.com', passwordHash: 'x', role: 'student', department: 'IT', year: 1, rollNo: 'R9' });
+    const csv = H + 'Asha,IT,2,3,asha@a.com,Secret-pass-1,G1,R1\n"Ravi, K",CSE,3,5,ravi@a.com,Secret-pass-2,G2,R2\n' +
+      'Bad Year,IT,9,3,by@a.com,Secret-pass-3,G1,R3\nShort,IT,2,3,sp@a.com,abc,G1,R4\nDupMail,IT,2,3,asha@a.com,Secret-pass-5,G1,R5\nDupRoll,IT,2,3,dr@a.com,Secret-pass-6,G1,R1\nExists,IT,2,3,dup@a.com,Secret-pass-7,G1,R7\nRoll9,IT,2,3,r9@a.com,Secret-pass-8,G1,R9\n=cmd(),IT,2,3,f@a.com,Secret-pass-9,G1,R10\nBadBranch,XX,2,3,bb@a.com,Secret-pass-0,G1,R11\n';
+    const r = await imp(t, csv);
+    expect(r.status).toBe(201); expect(r.body.created).toBe(2); expect(r.body.failed.length).toBe(8);
+    expect(r.body.failed.map((f) => f.row)).toEqual([4, 5, 6, 7, 8, 9, 10, 11]);
+    expect(JSON.stringify(r.body)).not.toMatch(/Secret-pass/);
+    const u = await User.findOne({ email: 'ravi@a.com' });
+    expect(u.name).toBe('Ravi, K'); expect(u.mustChangePassword).toBe(true); expect(u.passwordHash).not.toContain('Secret'); expect(u.rollNo).toBe('R2');
+    expect(await User.countDocuments()).toBe(4);
+    expect((await imp(t, 'name,email\nA,a@a.com\n')).status).toBe(400);
+    expect((await imp(await mk('hod', 'h@a.com', 'IT'), csv)).status).toBe(403);
+    const again = await imp(t, csv); expect(again.body.created).toBe(0);
+  });
+  test('forced password change: blocked until changed, then works', async () => {
+    const t = await mk('admin', 'ad@a.com', 'CSE');
+    await imp(t, H + 'Asha,IT,2,3,asha@a.com,Secret-pass-1,G1,R1\n');
+    const login = await request(app).post('/api/auth/login').send({ email: 'asha@a.com', password: 'Secret-pass-1' });
+    expect(login.body.user.mustChangePassword).toBe(true);
+    const tok = login.body.token, auth = (r) => r.set('Authorization', 'Bearer ' + tok);
+    const blocked = await auth(request(app).get('/api/activities')); expect(blocked.status).toBe(403); expect(blocked.body.code).toBe('PASSWORD_CHANGE_REQUIRED');
+    expect((await auth(request(app).get('/api/auth/me'))).status).toBe(200);
+    expect((await auth(request(app).post('/api/auth/change-password')).send({ current: 'wrong-pass-1', next: 'New-pass-12345' })).status).toBe(401);
+    expect((await auth(request(app).post('/api/auth/change-password')).send({ current: 'Secret-pass-1', next: 'short' })).status).toBe(400);
+    expect((await auth(request(app).post('/api/auth/change-password')).send({ current: 'Secret-pass-1', next: 'Secret-pass-1' })).status).toBe(400);
+    const ok = await auth(request(app).post('/api/auth/change-password')).send({ current: 'Secret-pass-1', next: 'New-pass-12345' });
+    expect(ok.status).toBe(200); expect(ok.body.user.mustChangePassword).toBe(false);
+    expect((await request(app).get('/api/activities').set('Authorization', 'Bearer ' + ok.body.token)).status).toBe(200);
+    expect((await request(app).post('/api/auth/login').send({ email: 'asha@a.com', password: 'Secret-pass-1' })).status).toBe(401);
+    expect((await request(app).post('/api/auth/login').send({ email: 'asha@a.com', password: 'New-pass-12345' })).status).toBe(200);
+  });
+  test('counsellor sees and reviews only students in own batch/section/group; HOD sees whole department', async () => {
+    const mkS = (email, group) => User.create({ name: email, email, passwordHash: bcrypt.hashSync('password123', 4), role: 'student', department: 'IT', year: 2, batch: '2024', section: 'A', group }).then(async () => (await request(app).post('/api/auth/login').send({ email, password: 'password123' })).body.token);
+    const s1 = await mkS('s1@a.com', 'G1'), s2 = await mkS('s2@a.com', 'G2');
+    const id1 = (await submit(s1, { title: 'One' })).body.activity.id, id2 = (await submit(s2, { title: 'Two' })).body.activity.id;
+    await User.create({ name: 'c', email: 'c@a.com', passwordHash: bcrypt.hashSync('password123', 4), role: 'counsellor', department: 'IT', batch: '2024', section: 'A', group: 'G1' });
+    const c = (await request(app).post('/api/auth/login').send({ email: 'c@a.com', password: 'password123' })).body.token, ho = await mk('hod', 'h@a.com', 'IT');
+    const list = await request(app).get('/api/activities').set('Authorization', 'Bearer ' + c);
+    expect(list.body.activities.map((a) => a.title)).toEqual(['One']);
+    expect((await request(app).get('/api/activities/' + id2).set('Authorization', 'Bearer ' + c)).status).toBe(404);
+    expect((await request(app).post(`/api/activities/${id2}/review`).set('Authorization', 'Bearer ' + c).send({ decision: 'verify' })).status).toBe(404);
+    expect((await request(app).post(`/api/activities/${id1}/review`).set('Authorization', 'Bearer ' + c).send({ decision: 'verify' })).status).toBe(200);
+    expect((await request(app).get('/api/activities').set('Authorization', 'Bearer ' + ho)).body.activities.length).toBe(2);
+    const st = await request(app).get('/api/reports/students').set('Authorization', 'Bearer ' + c);
+    expect(st.body.students.map((x) => x.name)).toEqual(['s1@a.com']);
   });
 });
