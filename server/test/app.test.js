@@ -268,3 +268,18 @@ test('login locks after 5 wrong attempts, even with the right password', async (
   const r = await request(app).post('/api/auth/login').send({ email: 'lock@a.com', password: 'password123' });
   expect(r.status).toBe(429);
 });
+
+test('captcha: when Turnstile is configured, login needs a token verified by Cloudflare', async () => {
+  await User.create({ name: 'T', email: 'cap@a.com', passwordHash: await bcrypt.hash('password123', 4), role: 'student', department: 'IT', year: 2 });
+  process.env.TURNSTILE_SECRET = 'test-secret'; process.env.TURNSTILE_SITE_KEY = 'site-key';
+  const real = global.fetch; let calls = 0;
+  global.fetch = async (url, opt) => { calls++; return { json: async () => ({ success: String(opt.body).includes('response=good') }) }; };
+  try {
+    expect((await request(app).post('/api/auth/login').send({ email: 'cap@a.com', password: 'password123' })).status).toBe(400);
+    expect((await request(app).post('/api/auth/login').send({ email: 'cap@a.com', password: 'password123', turnstileToken: 'bad' })).status).toBe(400);
+    expect((await request(app).post('/api/auth/login').send({ email: 'cap@a.com', password: 'password123', turnstileToken: 'good' })).status).toBe(200);
+    expect(calls).toBe(2);
+    expect((await request(app).get('/api/auth/config')).body.turnstileSiteKey).toBe('site-key');
+  } finally { global.fetch = real; delete process.env.TURNSTILE_SECRET; delete process.env.TURNSTILE_SITE_KEY; }
+  expect((await request(app).get('/api/auth/config')).body.turnstileSiteKey).toBe('');
+});

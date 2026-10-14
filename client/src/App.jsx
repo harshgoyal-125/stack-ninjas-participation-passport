@@ -28,9 +28,16 @@ function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null;
 function Auth({ onAuth, onBack }) {
   const [f, setF] = useState({}); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const [site, setSite] = useState(''); const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
+  useEffect(() => { api('/auth/config').then((c) => setSite(c.turnstileSiteKey || '')).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!site) return;
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
+  }, [site]);
   async function go(e) {
     e.preventDefault(); setErr(''); setBusy(true);
-    try { const r = await api('/auth/login', { method: 'POST', body: f }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+    try { const r = await api('/auth/login', { method: 'POST', body: { ...f, turnstileToken: tok } }); setToken(r.token); onAuth(r.user); } catch (x) { setErr(x.message); if (window.turnstile && wid.current !== null) { window.turnstile.reset(wid.current); setTok(''); } } finally { setBusy(false); }
   }
   return (
     <main className="center">
@@ -39,8 +46,9 @@ function Auth({ onAuth, onBack }) {
         <p className="muted">Log in to your verified participation record.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
         <label>Password<input type="password" required autoComplete="current-password" onChange={set('password')} /></label>
+        {site && <div ref={box} className="cf" />}
         <Err e={err} />
-        <button className="btn" disabled={busy}>Log in</button>
+        <button className="btn" disabled={busy || (!!site && !tok)}>Log in</button>
         <p className="muted small" style={{ textAlign: "center" }}>Accounts are created by your college administrator.</p>
         {onBack && <button type="button" className="link" onClick={onBack}>← Back to home</button>}
       </form>
