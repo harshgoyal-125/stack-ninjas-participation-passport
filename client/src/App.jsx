@@ -484,7 +484,7 @@ function ConfirmDelete({ u, onCancel, onConfirm }) {
   );
 }
 
-function Avatar({ user, onLogout, onChangePw }) {
+function Avatar({ user, onLogout, onChangePw, onProfile }) {
   const [open, setOpen] = useState(false); const ref = React.useRef(null);
   const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
   useEffect(() => {
@@ -496,7 +496,7 @@ function Avatar({ user, onLogout, onChangePw }) {
   const rows = [['Role', user.role], ['Email', user.email], ['Department', user.department], user.year && ['Year', user.year], user.semester && ['Semester', user.semester], user.rollNo && ['Roll no', user.rollNo], user.batch && ['Batch', user.batch], user.section && ['Section', user.section], user.group && ['Group', user.group]].filter(Boolean);
   return (
     <div className={'avatar-wrap' + (open ? ' open' : '')} ref={ref} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
-      <button className="avatar" aria-label={'Account: ' + user.name} aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(true)}>{initials}</button>
+      <button className="avatar" aria-label={'Account: ' + user.name} aria-haspopup="true" aria-expanded={open} onClick={() => { setOpen(false); onProfile && onProfile(); }}>{initials}</button>
       <div className="avatar-pop glass" role="region" aria-label="Account details">
         <b className="ap-name">{user.name}</b>
         <dl>{rows.map(([k, v]) => <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl>
@@ -504,6 +504,32 @@ function Avatar({ user, onLogout, onChangePw }) {
         <button className="ghost" onClick={() => { setOpen(false); onLogout(); }}>Log out</button>
       </div>
     </div>
+  );
+}
+
+function Profile({ user, onBack, onChangePw, onLogout }) {
+  const [acts, setActs] = useState(null); const [err, setErr] = useState('');
+  useEffect(() => { api('/activities').then((r) => setActs(r.activities)).catch((e) => setErr(e.message)); }, []);
+  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
+  const cnt = (st) => (acts || []).filter((a) => a.status === st).length;
+  const rows = [['Name', user.name], ['Email', user.email], ['Role', user.role], ['Department', user.department], ['Year', user.year], ['Semester', user.semester], ['Roll no', user.rollNo], ['Batch', user.batch], ['Section', user.section], ['Group', user.group]].filter(([, v]) => v);
+  const isStu = user.role === 'student'; const isCou = ['counsellor', 'faculty'].includes(user.role);
+  const scope = isCou ? 'You review students of ' + user.department + [user.batch && ' batch ' + user.batch, user.section && 'section ' + user.section, user.group && 'group ' + user.group].filter(Boolean).map((x, i) => (i ? ', ' : ' · ') + x).join('') + '.' : user.role === 'hod' ? 'You see every student in ' + user.department + '.' : 'You see every department.';
+  return (
+    <>
+      <section className="glass hero prof-hero"><div className="prof-av" aria-hidden="true">{initials}</div>
+        <div><p className="eyebrow">My profile</p><h2>{user.name}</h2><p className="lead">{user.email}</p><p className="muted small">{isStu ? 'Student' : user.role} · {user.department}</p></div></section>
+      <div className="prof-grid">
+        <section className="glass card"><h3>Details</h3><dl className="prof-dl">{rows.map(([k, v]) => <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl></section>
+        <section className="glass card"><h3>{isStu ? 'My activity status' : isCou ? 'Review summary' : 'Activity summary'}</h3>
+          {!isStu && <p className="muted small">{scope}</p>}
+          {err && <Err e={err} />}{!acts && !err && <p className="muted">Loading…</p>}
+          {acts && <div className="stats"><div><b>{cnt('verified')}</b><span>Verified</span></div><div><b>{cnt('submitted')}</b><span>{isStu ? 'In review' : 'To review'}</span></div><div><b>{cnt('changes_needed')}</b><span>Changes needed</span></div></div>}
+          {acts && <p className="muted small">{acts.length} {isStu ? 'activities in total' : 'activities in your scope'}.</p>}
+        </section>
+      </div>
+      <div className="prof-actions"><button className="btn outline" onClick={onBack}>← Back</button><button className="btn outline" onClick={onChangePw}>Change password</button><button className="btn" onClick={onLogout}>Log out</button></div>
+    </>
   );
 }
 
@@ -586,13 +612,14 @@ function Main() {
   return (
     <div className="shell">
       <header className="top"><Logo size={34} />
-        <div className="navlinks">{!staff && <><button className="link" aria-current="page" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Home</button></>}
+        <div className="navlinks">{!staff && <><button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => { setView('main'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</button></>}
           {staff && <>{['faculty', 'counsellor'].includes(user.role) && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
-          <Avatar user={user} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
+          <Avatar user={user} onProfile={() => setView('profile')} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
       <main className="wrap" key={view}>
-        {user.role === 'student' && <Student user={user} />}
-        {['faculty', 'counsellor'].includes(user.role) && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
-        {['admin', 'hod'].includes(user.role) && <Reports user={user} />}
+        {view === 'profile' && <Profile user={user} onBack={() => setView('main')} onChangePw={() => setAskPw(true)} onLogout={() => setAskOut(true)} />}
+        {view !== 'profile' && user.role === 'student' && <Student user={user} />}
+        {view !== 'profile' && ['faculty', 'counsellor'].includes(user.role) && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
+        {view !== 'profile' && ['admin', 'hod'].includes(user.role) && <Reports user={user} />}
       </main>
       {askPw && <ChangePassword onCancel={() => setAskPw(false)} onDone={(u) => { setAskPw(false); setUser(u); }} />}
       {askOut && <ConfirmLogout onCancel={() => setAskOut(false)} onConfirm={() => { setAskOut(false); setToken(''); setUser(null); setView('main'); }} />}
