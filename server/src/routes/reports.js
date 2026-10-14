@@ -89,21 +89,21 @@ router.get('/student-list', requireRole(...STAFF), async (req, res, next) => {
     const year = num(req.query.year), sem = num(req.query.semester);
     if (year) sq.year = year; if (sem) sq.semester = sem;
     const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
-    if (q) { const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); sq.$or = [{ name: re }, { email: re }, { rollNo: re }]; }
-    const us = await User.find(sq).select('name email department year semester rollNo batch section group').sort({ name: 1 }).limit(300).lean();
+    if (q) { const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); sq.$or = [{ name: re }, { email: re }, { rollNo: re }, { enrollmentNo: re }]; }
+    const us = await User.find(sq).select('name email department year semester enrollmentNo rollNo batch section group').sort({ name: 1 }).limit(300).lean();
     const ag = await Activity.aggregate([{ $match: { student: { $in: us.map((u) => u._id) } } }, { $group: { _id: { s: '$student', st: '$status' }, c: { $sum: 1 } } }]);
     const cnt = {}; ag.forEach((g) => { const k = String(g._id.s); cnt[k] = cnt[k] || {}; cnt[k][g._id.st] = g.c; });
-    res.json({ students: us.map((u) => ({ id: u._id, name: u.name, email: u.email, department: u.department, year: u.year, semester: u.semester, rollNo: u.rollNo || '', batch: u.batch || '', section: u.section || '', group: u.group || '', verified: cnt[String(u._id)]?.verified || 0, inReview: cnt[String(u._id)]?.submitted || 0, changesNeeded: cnt[String(u._id)]?.changes_needed || 0 })) });
+    res.json({ students: us.map((u) => ({ id: u._id, name: u.name, email: u.email, department: u.department, year: u.year, semester: u.semester, enrollmentNo: u.enrollmentNo, rollNo: u.rollNo || '', batch: u.batch || '', section: u.section || '', group: u.group || '', verified: cnt[String(u._id)]?.verified || 0, inReview: cnt[String(u._id)]?.submitted || 0, changesNeeded: cnt[String(u._id)]?.changes_needed || 0 })) });
   } catch (e) { next(e); }
 });
 router.get('/student/:id', requireRole(...STAFF), async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ error: 'Not found' });
     const sq = await studentQuery(req.user); sq._id = req.params.id;
-    const u = await User.findOne(sq).select('name email department year semester rollNo batch section group');
+    const u = await User.findOne(sq).select('name email department year semester enrollmentNo rollNo batch section group');
     if (!u) return res.status(404).json({ error: 'Not found' });
     const acts = await Activity.find({ student: u._id }).select('title type organizer date status reviewNote').sort({ date: -1 }).limit(200);
-    res.json({ student: { id: u._id, name: u.name, email: u.email, department: u.department, year: u.year, semester: u.semester, rollNo: u.rollNo || '', batch: u.batch || '', section: u.section || '', group: u.group || '' }, activities: acts.map((a) => ({ id: a._id, title: a.title, type: a.type, organizer: a.organizer, date: a.date, status: a.status, reviewNote: a.reviewNote })) });
+    res.json({ student: { id: u._id, name: u.name, email: u.email, department: u.department, year: u.year, semester: u.semester, enrollmentNo: u.enrollmentNo, rollNo: u.rollNo || '', batch: u.batch || '', section: u.section || '', group: u.group || '' }, activities: acts.map((a) => ({ id: a._id, title: a.title, type: a.type, organizer: a.organizer, date: a.date, status: a.status, reviewNote: a.reviewNote })) });
   } catch (e) { next(e); }
 });
 module.exports = router;

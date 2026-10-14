@@ -330,3 +330,36 @@ describe('password reset', () => {
     expect((await request(app).patch('/api/admin/users/' + id).set(H(ad)).send({ year: 9 })).status).toBe(400);
   });
 });
+
+describe('branch change, enrollment number, groups, DS', () => {
+  const H = (t) => ({ Authorization: 'Bearer ' + t });
+  const mkS = (extra = {}) => User.create({ name: 'S', email: 's' + Math.random() + '@a.com', passwordHash: 'x', role: 'student', department: 'IT', year: 2, ...extra });
+  test('group accepts only G1/G2 (g2 and 2 are normalised), DS is a valid branch', async () => {
+    const t = await mk('admin', 'ad@a.com', 'IT');
+    const body = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'DS', year: 1, ...extra });
+    const a = await request(app).post('/api/admin/users').set(H(t)).send(body({ group: 'g2' }));
+    expect(a.status).toBe(201); expect(a.body.user.group).toBe('G2'); expect(a.body.user.department).toBe('DS');
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(body({ group: 'G3' }))).status).toBe(400);
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(body({ group: 'A' }))).status).toBe(400);
+  });
+  test('enrollment number is unique', async () => {
+    const t = await mk('admin', 'ad@a.com', 'IT');
+    const body = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'IT', year: 1, enrollmentNo: 'E1', ...extra });
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(body())).status).toBe(201);
+    expect((await request(app).post('/api/admin/users').set(H(t)).send(body())).status).toBe(409);
+  });
+  test('branch change keeps enrollment number and records, moves records to the new branch, keeps history', async () => {
+    const ad = await mk('admin', 'ad@a.com', 'IT');
+    const s = await mkS({ enrollmentNo: 'E77', rollNo: 'R1', section: 'A', group: 'G1' });
+    await Activity.create({ student: s._id, department: 'IT', title: 'Hack', type: 'Hackathon', organizer: 'x', date: new Date(), status: 'verified' });
+    const ds = await mk('hod', 'hds@a.com', 'DS');
+    const r = await request(app).patch('/api/admin/users/' + s._id).set(H(ad)).send({ department: 'DS', rollNo: 'D9', section: 'B', group: 'G2' });
+    expect(r.status).toBe(200); expect(r.body.user.department).toBe('DS'); expect(r.body.user.enrollmentNo).toBe('E77'); expect(r.body.user.rollNo).toBe('D9');
+    const a = await Activity.findOne({ student: s._id }); expect(a.department).toBe('DS'); expect(a.title).toBe('Hack');
+    const u = await User.findById(s._id); expect(u.history.length).toBe(1); expect(u.history[0].department).toBe('IT'); expect(u.history[0].rollNo).toBe('R1');
+    const list = await request(app).get('/api/activities').set(H(ds)); expect(list.body.activities.length).toBe(1);
+    const dup = await mkS({ rollNo: 'D10' });
+    expect((await request(app).patch('/api/admin/users/' + s._id).set(H(ad)).send({ rollNo: 'D10' })).status).toBe(409);
+    expect((await request(app).patch('/api/admin/users/' + s._id).set(H(ad)).send({ group: 'G9' })).status).toBe(400);
+  });
+});

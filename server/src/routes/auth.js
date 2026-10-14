@@ -5,7 +5,7 @@ const { mailEnabled, sendMail } = require('../mailer');
 const User = require('../models/User');
 const { sign, requireAuth } = require('../middleware');
 const str = (v) => (typeof v === 'string' ? v : '');
-const pub = (u) => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department, year: u.year, semester: u.semester, rollNo: u.rollNo, batch: u.batch, section: u.section, group: u.group, mustChangePassword: !!u.mustChangePassword });
+const pub = (u) => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department, year: u.year, semester: u.semester, enrollmentNo: u.enrollmentNo, rollNo: u.rollNo, batch: u.batch, section: u.section, group: u.group, mustChangePassword: !!u.mustChangePassword });
 
 const fails = new Map();
 // Cloudflare Turnstile: only enforced when TURNSTILE_SECRET is set (production). Verified on the server.
