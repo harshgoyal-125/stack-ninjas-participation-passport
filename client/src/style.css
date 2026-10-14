@@ -249,3 +249,4 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 .chart{align-content:start}.charts>.chart:nth-child(4){grid-column:span 2}@media(max-width:700px){.charts>.chart:nth-child(4){grid-column:auto}}
 .cf{display:grid;justify-items:center;min-height:65px}
 .actions{display:flex;gap:6px;flex-wrap:wrap}.actions .ghost{padding:6px 12px;min-height:36px;font-size:.85rem}
+.pw-wrap{position:relative;display:block}.pw-wrap input{width:100%;padding-right:72px}.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--muted,#9fb0d0);font-size:.8rem;font-weight:600;min-height:32px;padding:4px 10px;cursor:pointer;border-radius:8px}.pw-eye:hover,.pw-eye:focus-visible{color:#fff;background:rgba(255,255,255,.08)}

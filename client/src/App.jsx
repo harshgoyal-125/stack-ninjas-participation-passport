@@ -23,6 +23,15 @@ function Mark({ size = 40 }) {
 function Logo({ size = 40, text = true }) { return <span className="logo"><Mark size={size} />{text && <span className="wordmark">Campus<b>Trace</b></span>}</span>; }
 
 function Badge({ s }) { const [t, i] = STATUS[s]; return <span className={'badge ' + s}><b aria-hidden="true">{i}</b> {t}</span>; }
+function PwInput(props) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="pw-wrap">
+      <input {...props} type={show ? 'text' : 'password'} />
+      <button type="button" className="pw-eye" aria-pressed={show} aria-label={show ? 'Hide password' : 'Show password'} title={show ? 'Hide password' : 'Show password'} onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
+    </span>
+  );
+}
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
 function Auth({ onAuth, onBack }) {
@@ -46,7 +55,7 @@ function Auth({ onAuth, onBack }) {
         <div className="auth-logo"><Mark size={64} /><h1 className="wordmark big">Campus<b>Trace</b></h1></div>
         <p className="muted">Log in to your verified participation record.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
-        <label>Password<input type="password" required autoComplete="current-password" onChange={set('password')} /></label>
+        <label>Password<PwInput required autoComplete="current-password" onChange={set('password')} /></label>
         {site && <div ref={box} className="cf" />}
         <Err e={err} />
         <button className="btn" disabled={busy || (!!site && !tok)}>Log in</button>
@@ -306,7 +315,7 @@ function AdminUsers() {
         <h3>Create account</h3>
         <label>Name<input required onChange={set('name')} /></label>
         <label>Email<input type="email" required onChange={set('email')} /></label>
-        <label>Temporary password (8+)<input type="password" minLength={8} required onChange={set('password')} /></label>
+        <label>Temporary password (8+)<PwInput minLength={8} required onChange={set('password')} /></label>
         <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'counsellor', 'hod', 'faculty', 'admin'].map((r) => <option key={r}>{r}</option>)}</select></label>
           <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
         {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
@@ -355,7 +364,7 @@ function ResetPw({ u, onCancel, onDone }) {
       <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="rp-t" onClick={(e) => e.stopPropagation()} onSubmit={go}>
         <h2 id="rp-t">Reset password</h2>
         <p className="muted">Set a temporary password for {u.name} ({u.email}). Share it with them privately.</p>
-        <label>Temporary password (8+)<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
+        <label>Temporary password (8+)<PwInput required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
         <Err e={err} />
         <div className="row"><button type="button" className="ghost" onClick={onCancel}>Cancel</button><button className="btn">Set password</button></div>
       </form>
@@ -385,8 +394,8 @@ function ResetPage({ token }) {
     <main className="center"><form className="card auth" onSubmit={go}>
       <div className="auth-logo"><Mark size={56} /><h1 className="wordmark big">Choose a new password</h1></div>
       {done ? <><p className="ok" role="status">Password changed. You can log in now.</p><a className="btn" href="/">Go to login</a></> : <>
-        <label>New password (8+)<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
-        <label>New password again<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setAgain(e.target.value)} /></label>
+        <label>New password (8+)<PwInput required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setPw(e.target.value)} /></label>
+        <label>New password again<PwInput required minLength={8} maxLength={72} autoComplete="new-password" onChange={(e) => setAgain(e.target.value)} /></label>
         <Err e={err} /><button className="btn">Save password</button></>}
     </form></main>
   );
@@ -406,9 +415,9 @@ function ChangePassword({ onDone, onCancel }) {
       <form className="dialog glass" role="dialog" aria-modal="true" aria-labelledby="cp-t" onSubmit={go}>
         <h2 id="cp-t">Set your own password</h2>
         <p className="muted">{onCancel ? 'Choose a new password (8+ characters).' : 'You are using a password given by the admin. Choose a new one (8+ characters) to continue.'}</p>
-        <label>Current password<input type="password" required autoComplete="current-password" onChange={set('current')} /></label>
-        <label>New password<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('next')} /></label>
-        <label>New password again<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('again')} /></label>
+        <label>Current password<PwInput required autoComplete="current-password" onChange={set('current')} /></label>
+        <label>New password<PwInput required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('next')} /></label>
+        <label>New password again<PwInput required minLength={8} maxLength={72} autoComplete="new-password" onChange={set('again')} /></label>
         <Err e={err} /><button className="btn" disabled={busy}>Save and continue</button>{onCancel && <button type="button" className="link" onClick={onCancel}>Cancel</button>}
       </form>
     </div>
