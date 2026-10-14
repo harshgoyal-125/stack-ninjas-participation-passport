@@ -401,3 +401,25 @@ input[type=password]::-ms-reveal,input[type=password]::-ms-clear,input::-ms-clea
 /* white screen then 0.6s reveal of home after the intro */
 .white-reveal{position:fixed;inset:0;background:#fff;z-index:9999;pointer-events:none;animation:whiteOut .6s ease .12s both}
 @keyframes whiteOut{from{opacity:1}to{opacity:0}}
+
+/* ice v2: ~40% icier. Frost blur, cool-blue tint, crisp ice edge, faint crystal facets. Revert tag: pre-ice2 */
+:root{--facets:linear-gradient(115deg,transparent 0 22%,rgba(255,255,255,.28) 22.4%,transparent 23% 47%,rgba(255,255,255,.18) 47.3%,transparent 48% 71%,rgba(255,255,255,.26) 71.3%,transparent 72%),linear-gradient(63deg,transparent 0 34%,rgba(190,230,255,.22) 34.3%,transparent 35% 63%,rgba(255,255,255,.16) 63.3%,transparent 64%),radial-gradient(circle at 18% 12%,rgba(255,255,255,.55),transparent 28%),radial-gradient(circle at 88% 92%,rgba(170,225,255,.35),transparent 32%)}
+[data-theme=light] .glass,[data-theme=light] .card,[data-theme=light] .vcard,[data-theme=light] .auth.card,[data-theme=light] .hero{
+background:var(--facets),linear-gradient(135deg,rgba(236,250,255,.62) 0%,rgba(190,228,255,.38) 45%,rgba(240,252,255,.5) 72%,rgba(176,220,255,.4) 100%);
+backdrop-filter:blur(26px) saturate(190%) brightness(1.06) contrast(1.02);-webkit-backdrop-filter:blur(26px) saturate(190%) brightness(1.06) contrast(1.02);
+border:1px solid rgba(255,255,255,.95);
+box-shadow:0 12px 34px rgba(40,90,170,.24),inset 0 2px 0 #fff,inset 1px 0 0 rgba(255,255,255,.8),inset 0 0 0 1px rgba(150,210,255,.5),inset 0 -14px 28px rgba(170,222,255,.3),0 0 0 1px rgba(160,215,255,.25)}
+[data-theme=light] .top{background:rgba(226,244,255,.66)!important;backdrop-filter:blur(26px) saturate(190%);border-bottom:1px solid rgba(255,255,255,.9)}
+[data-theme=light] .mile,[data-theme=light] .fchip,[data-theme=light] .btn.outline,[data-theme=light] .ghost{background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(205,235,255,.5));border:1px solid rgba(255,255,255,.95);box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(150,210,255,.35);backdrop-filter:blur(18px) saturate(180%)}
+[data-theme=light] .avatar-pop.glass,[data-theme=light] .dialog.glass,[data-theme=light] .overlay .dialog{background:var(--facets),linear-gradient(135deg,rgba(244,252,255,.93),rgba(214,236,255,.9))!important;backdrop-filter:blur(26px) saturate(180%)}
+/* dark ice: deep navy glass with cyan frost edges */
+:root:not([data-theme=light]) .glass,:root:not([data-theme=light]) .card,:root:not([data-theme=light]) .vcard,:root:not([data-theme=light]) .auth.card{
+background:var(--facets),linear-gradient(150deg,rgba(130,200,255,.16),rgba(40,70,130,.28) 55%,rgba(110,190,255,.12));
+backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);
+border:1px solid rgba(190,230,255,.38);
+box-shadow:0 14px 36px rgba(2,8,30,.55),inset 0 1px 0 rgba(220,244,255,.55),inset 0 0 0 1px rgba(120,190,255,.16),inset 0 -14px 28px rgba(90,160,240,.12)}
+:root:not([data-theme=light]) .top{background:rgba(14,26,52,.62)!important;backdrop-filter:blur(24px) saturate(170%);border-bottom:1px solid rgba(190,230,255,.28)}
+:root:not([data-theme=light]) .avatar-pop.glass,:root:not([data-theme=light]) .dialog.glass,:root:not([data-theme=light]) .overlay .dialog{background:var(--facets),linear-gradient(160deg,#1b2d55,#10203f)!important}
+
+:root:not([data-theme=light]){--facets:linear-gradient(115deg,transparent 0 22%,rgba(200,235,255,.2) 22.4%,transparent 23% 47%,rgba(200,235,255,.12) 47.3%,transparent 48% 71%,rgba(200,235,255,.18) 71.3%,transparent 72%),linear-gradient(63deg,transparent 0 34%,rgba(150,210,255,.14) 34.3%,transparent 35% 63%,rgba(200,235,255,.1) 63.3%,transparent 64%),radial-gradient(circle at 12% 8%,rgba(200,235,255,.16),transparent 22%),radial-gradient(circle at 90% 94%,rgba(130,200,255,.16),transparent 30%)}
+:root:not([data-theme=light]) .muted,:root:not([data-theme=light]) .glass p{color:#c3d3ee}
