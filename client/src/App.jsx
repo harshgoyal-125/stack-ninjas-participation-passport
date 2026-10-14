@@ -91,7 +91,7 @@ function Landing({ onLogin, onRegister }) {
           <div><p className="eyebrow">Student participation platform</p>
             <h2>Every activity.<em>One verified record.</em></h2>
             <p className="lead">An uploaded certificate is evidence, not a verified record. CampusTrace collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
-            <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>New student? Sign up</button></div></div>
+            <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>Sign up</button></div></div>
           <img className="art logo" src="/img/logo.png" alt="CampusTrace logo: Learn, Verify, Grow" />
         </section>
         <h2 className="sec">How it works</h2>
