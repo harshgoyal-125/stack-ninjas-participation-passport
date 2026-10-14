@@ -245,3 +245,5 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 @media (max-width:560px){.grid4{grid-template-columns:1fr}.lp{gap:48px}.vcard{padding:26px 28px}.top{padding:8px 14px!important;min-height:58px}.shell{padding-top:76px}.fchip{font-size:.78rem}.lp-copy .row>*{flex:1 1 100%}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.intro{animation:none!important}.spark,.shine{display:none}}
 .state.ok,.state.mid,.state.bad{font-weight:400}.state.ok span{font-weight:400;color:var(--muted)}.state.ok{color:inherit}
+.lp-copy .small{margin-top:16px}.hero .who{margin:6px 0 12px}.hero .eyebrow{margin-bottom:0}
+.chart{align-content:start}.charts>.chart:nth-child(4){grid-column:span 2}@media(max-width:700px){.charts>.chart:nth-child(4){grid-column:auto}}
