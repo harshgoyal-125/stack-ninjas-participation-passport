@@ -71,12 +71,10 @@ function ActivityForm({ initial, onDone, onCancel }) {
 
 
 function Splash({ onDone }) {
-  useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 2600); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(onDone, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 800 : 3800); return () => clearTimeout(t); }, []);
   return (
-    <div className="splash" role="status" aria-label="Participation Passport loading" onClick={onDone}>
-      <img src="/img/hero.jpg" alt="" aria-hidden="true" />
-      <h1>Participation<br />Passport</h1>
-      <p>Evidence in. Verified record out.</p>
+    <div className="splash" role="status" aria-label="CampusTrace loading" onClick={onDone}>
+      <div className="logoframe"><img src="/img/logo.jpg" alt="CampusTrace logo: Learn, Verify, Grow" /><i className="star" aria-hidden="true" /></div>
     </div>
   );
 }
@@ -94,7 +92,7 @@ function Landing({ onLogin, onRegister }) {
             <h2>Every activity.<em>One verified record.</em></h2>
             <p className="lead">An uploaded certificate is evidence, not a verified record. Passport collects the evidence, gets it verified by faculty, and reports only what is verified.</p>
             <div className="row"><button className="btn" onClick={onLogin}>Login</button><button className="ghost" onClick={onRegister}>New student? Sign up</button></div></div>
-          <img className="art" src="/img/hero.jpg" alt="" aria-hidden="true" />
+          <img className="art logo" src="/img/logo.jpg" alt="CampusTrace logo: Learn, Verify, Grow" />
         </section>
         <h2 className="sec">How it works</h2>
         <div className="grid">{steps.map(([n, t, d]) => <article key={n} className="glass card acard"><span className="num">{n}</span><h3>{t}</h3><p className="muted">{d}</p></article>)}</div>
