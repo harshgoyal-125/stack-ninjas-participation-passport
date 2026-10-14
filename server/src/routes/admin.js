@@ -51,11 +51,11 @@ const HEADERS = { name: 'name', branch: 'branch', department: 'branch', year: 'y
 // Bulk-create students. Good rows are imported, bad rows are listed with the reason. Passwords are never echoed back.
 router.post('/users/import', (req, res, next) => upload.single('file')(req, res, next), async (req, res, next) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'Attach a CSV file in the "file" field (max 1 MB)' });
+    if (!req.file) return res.status(400).json({ help: true, error: 'Attach a CSV file in the "file" field (max 1 MB)' });
     const rows = parseCsv(req.file.buffer.toString('utf8'));
-    if (rows.length < 2) return res.status(400).json({ error: 'The file has no data rows' });
+    if (rows.length < 2) return res.status(400).json({ help: true, error: 'The file has no data rows' });
     const cols = rows[0].map((h) => HEADERS[h.trim().toLowerCase().replace(/[^a-z]/g, '')] || null);
-    for (const need of ['name', 'branch', 'year', 'semester', 'email', 'password', 'group', 'rollNo']) if (!cols.includes(need)) return res.status(400).json({ error: 'Missing column: ' + need + '. Required: name, branch, year, semester, email, initial password, group, roll number' });
+    for (const need of ['name', 'branch', 'year', 'semester', 'email', 'password', 'group']) if (!cols.includes(need)) return res.status(400).json({ help: true, error: 'Missing column: ' + need + '. Required columns: name, branch, year, semester, email, initial password, group. Optional: roll number, batch, section.' });
     if (rows.length - 1 > MAX_ROWS) return res.status(400).json({ error: 'Too many rows (max ' + MAX_ROWS + ' per file)' });
     const failed = []; const good = []; const seenEmail = new Set(), seenRoll = new Set();
     rows.slice(1).forEach((r, idx) => {
@@ -69,23 +69,23 @@ router.post('/users/import', (req, res, next) => upload.single('file')(req, res,
       const year = Number(v.year); if (!(year >= 1 && year <= 4)) return bad('Year must be 1-4');
       const sem = Number(v.semester); if (!(sem >= 1 && sem <= 8)) return bad('Semester must be 1-8');
       if (!v.password || v.password.length < 8 || v.password.length > 72) return bad('Initial password must be 8-72 characters');
-      if (!v.rollNo || v.rollNo.length > 30) return bad('Roll number is required (max 30 characters)');
+      if (v.rollNo && v.rollNo.length > 30) return bad('Roll number is too long (max 30 characters)');
       if (!v.group || v.group.length > 10) return bad('Group is required (max 10 characters)');
       if (seenEmail.has(v.email)) return bad('Duplicate email in this file');
-      if (seenRoll.has(v.rollNo)) return bad('Duplicate roll number in this file');
-      seenEmail.add(v.email); seenRoll.add(v.rollNo);
+      if (v.rollNo && seenRoll.has(v.rollNo)) return bad('Duplicate roll number in this file');
+      seenEmail.add(v.email); if (v.rollNo) seenRoll.add(v.rollNo);
       good.push({ line, v, dept, year, sem });
     });
-    const emails = good.map((g) => g.v.email), rolls = good.map((g) => g.v.rollNo);
+    const emails = good.map((g) => g.v.email), rolls = good.map((g) => g.v.rollNo).filter(Boolean);
     const [ex1, ex2] = await Promise.all([User.find({ email: { $in: emails } }).distinct('email'), User.find({ rollNo: { $in: rolls } }).distinct('rollNo')]);
     const e1 = new Set(ex1), e2 = new Set(ex2); const ok = [];
     for (const g of good) {
       if (e1.has(g.v.email)) failed.push({ row: g.line, email: g.v.email, error: 'Email already registered' });
-      else if (e2.has(g.v.rollNo)) failed.push({ row: g.line, email: g.v.email, error: 'Roll number already registered' });
+      else if (g.v.rollNo && e2.has(g.v.rollNo)) failed.push({ row: g.line, email: g.v.email, error: 'Roll number already registered' });
       else ok.push(g);
     }
     const docs = [];
-    for (const g of ok) docs.push({ name: g.v.name, email: g.v.email, passwordHash: await bcrypt.hash(g.v.password, 10), role: 'student', department: g.dept, year: g.year, semester: g.sem, rollNo: g.v.rollNo, group: g.v.group, batch: g.v.batch || undefined, section: g.v.section || undefined, mustChangePassword: true });
+    for (const g of ok) docs.push({ name: g.v.name, email: g.v.email, passwordHash: await bcrypt.hash(g.v.password, 10), role: 'student', department: g.dept, year: g.year, semester: g.sem, rollNo: g.v.rollNo || undefined, group: g.v.group, batch: g.v.batch || undefined, section: g.v.section || undefined, mustChangePassword: true });
     let created = 0;
     try { created = (await User.insertMany(docs, { ordered: false })).length; } catch (e) { if (e.insertedDocs) created = e.insertedDocs.length; else throw e; }
     failed.sort((a, b) => a.row - b.row);

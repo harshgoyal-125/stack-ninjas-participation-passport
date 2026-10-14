@@ -7,6 +7,7 @@ const { router: auth } = require('./routes/auth');
 const activities = require('./routes/activities');
 const reports = require('./routes/reports');
 const admin = require('./routes/admin');
+const { router: shares, publicRouter } = require('./routes/shares');
 
 // Rejects any request body/query key that starts with "$" or contains "." (NoSQL operator injection like {"$ne": ""}).
 function noOperatorKeys(value) {
@@ -37,13 +38,16 @@ function createApp() {
   app.use('/api/activities', activities);
   app.use('/api/reports', reports);
   app.use('/api/admin', admin);
+  app.use('/api/shares', shares);
+  const publicLimiter = process.env.NODE_ENV === 'test' ? (q, s, n) => n() : rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
+  app.use('/api/public', publicLimiter, publicRouter);
   app.get('/api/health', (req, res) => res.json({ ok: true }));
   app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
   const dist = path.join(__dirname, '..', '..', 'client', 'dist');
   if (fs.existsSync(dist)) {
     app.use(express.static(dist));
-    app.get(/^\/(?!api).*/, (req, res) => res.sendFile(path.join(dist, 'index.html')));
+    app.get(/^\/(?!api).*/, (req, res) => { if (req.path.startsWith('/p/')) res.set('X-Robots-Tag', 'noindex, nofollow'); res.sendFile(path.join(dist, 'index.html')); });
   }
   // eslint-disable-next-line no-unused-vars
   app.use((err, req, res, next) => {

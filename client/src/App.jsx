@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { api, setToken, hasToken, openBlob } from './api.js';
 
 const DEPTS = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE'];
@@ -127,6 +128,7 @@ function Student({ user }) {
         <div className="r"><b>{n('submitted')}</b><span>⏳ Active</span></div>
         <div className="c"><b>{n('changes_needed')}</b><span>! Failed</span></div>
       </section>
+      <Sharing />
       <div className="sechead"><h2>Your activity trail</h2>
         <div className="chips" role="group" aria-label="Filter">{['All', 'Technical', 'Cultural', 'Sports'].map((g) => <button key={g} aria-pressed={group === g} onClick={() => { setGroup(g); setTab('activities'); }}>{g}</button>)}</div></div>
       <Err e={err} />
@@ -263,19 +265,26 @@ function ChangePassword({ onDone }) {
 }
 
 function CsvImport({ onDone }) {
-  const [res, setRes] = useState(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false); const [help, setHelp] = useState(false);
+  const sample = 'name,branch,year,semester,email,initial password,group,roll number\nAsha Rao,IT,2,3,asha@college.edu,Temp-pass-123,G1,21IT001\nRavi Kumar,CSE,1,1,ravi@college.edu,Temp-pass-456,G2,\n';
+  const download = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([sample], { type: 'text/csv' })); a.download = 'students-template.csv'; a.click(); };
   async function go(e) {
-    e.preventDefault(); setErr(''); setRes(null);
+    e.preventDefault(); setErr(''); setRes(null); setHelp(false);
     const file = e.target.elements.file.files[0]; if (!file) return setErr('Choose a CSV file');
     const form = new FormData(); form.append('file', file); setBusy(true);
-    try { const r = await api('/admin/users/import', { method: 'POST', form }); setRes(r); onDone(); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+    try { const r = await api('/admin/users/import', { method: 'POST', form }); setRes(r); onDone(); } catch (x) { setErr(x.message); setHelp(!!x.help); } finally { setBusy(false); }
   }
   return (
     <form className="glass form" onSubmit={go}>
       <h3>Import students from CSV</h3>
-      <p className="muted small">Columns: name, branch, year, semester, email, initial password, group, roll number (optional: batch, section). Max 200 rows. Good rows are created; bad rows are listed below. Students must change the password at first login.</p>
+      <p className="muted small">Required columns: name, branch, year, semester, email, initial password, group. Max 200 rows. Good rows are created; bad rows are listed below. Students must change the password at first login.</p>
       <input type="file" name="file" accept=".csv,text/csv" />
       <Err e={err} />
+      <button type="button" className="link" onClick={() => setHelp(!help)} aria-expanded={help}>{help ? 'Hide CSV format help' : 'Show CSV format help'}</button>
+      {help && <div className="note" role="region" aria-label="CSV format help"><p><b>The first row must be these column names</b> (any order, upper or lower case):</p>
+        <p className="small">name, branch, year, semester, email, initial password, group, roll number (optional), batch (optional), section (optional)</p>
+        <ul className="small"><li>branch: CSE, IT, ECE, EE, ME or CE</li><li>year: 1 to 4. semester: 1 to 8</li><li>email must be unique. Roll number is optional but unique if given</li><li>initial password: 8 to 72 characters</li><li>Save as CSV (comma separated), max 200 rows, 1 MB</li></ul>
+        <pre className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{sample}</pre><button type="button" className="ghost" onClick={download}>Download template</button></div>}
       {res && <div role="status"><p className="ok">Created {res.created} student(s). {res.failed.length} row(s) skipped.</p>
         {res.failed.map((f) => <p key={f.row} className="muted small">Row {f.row} {f.email}: {f.error}</p>)}</div>}
       <button className="btn" disabled={busy}>{busy ? 'Importing…' : 'Import'}</button>
@@ -311,7 +320,57 @@ function ConfirmLogout({ onCancel, onConfirm }) {
   );
 }
 
-export default function App() {
+function Qr({ url, label }) {
+  const [src, setSrc] = useState('');
+  useEffect(() => { QRCode.toDataURL(url, { width: 220, margin: 2, errorCorrectionLevel: 'M' }).then(setSrc).catch(() => setSrc('')); }, [url]);
+  return src ? <img src={src} width="140" height="140" alt={'QR code for ' + label} style={{ background: '#fff', borderRadius: 12 }} /> : null;
+}
+function ShareRow({ title, share, onCreate, onStop }) {
+  const url = share ? location.origin + '/p/' + share.token : ''; const [copied, setCopied] = useState(false);
+  const copy = () => navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
+  return (
+    <div className="between" style={{ alignItems: 'center', gap: 14 }}>
+      <div style={{ flex: 1, minWidth: 200 }}><b>{title}</b>
+        {share ? <><p className="small" style={{ wordBreak: 'break-all', margin: '4px 0' }}>{url}</p><div className="row"><button className="ghost" onClick={copy}>{copied ? 'Copied' : 'Copy link'}</button><button className="ghost" onClick={onStop}>Stop sharing</button></div></> : <p className="muted small">Not shared. Only you can see it.</p>}
+        {!share && <button className="btn small" onClick={onCreate}>Create share link</button>}</div>
+      {share && <Qr url={url} label={title} />}
+    </div>
+  );
+}
+function Sharing() {
+  const [shares, setShares] = useState([]); const [acts, setActs] = useState([]); const [err, setErr] = useState('');
+  const load = () => Promise.all([api('/shares'), api('/reports/me')]).then(([s, r]) => { setShares(s.shares); setActs(r.activities); }).catch((x) => setErr(x.message));
+  useEffect(() => { load(); }, []);
+  const act = (fn) => async () => { setErr(''); try { await fn(); await load(); } catch (x) { setErr(x.message); } };
+  const prof = shares.find((s) => s.scope === 'profile');
+  return (
+    <section className="glass card" aria-label="Sharing">
+      <h3>Share your record</h3>
+      <p className="muted small">Links are off until you create one. Anyone with a link sees your name, department, year and verified items only (title, type, organizer, date). No email, no certificate file. You can stop sharing any time.</p>
+      <Err e={err} />
+      <ShareRow title="My full profile" share={prof} onCreate={act(() => api('/shares', { method: 'POST', body: { scope: 'profile' } }))} onStop={act(() => api('/shares/' + prof.id + '/revoke', { method: 'POST' }))} />
+      {acts.length === 0 && <p className="muted small">Verified activities appear here so you can share one certificate on its own.</p>}
+      {acts.map((a) => { const s = shares.find((x) => x.scope === 'activity' && String(x.activity) === String(a.id));
+        return <ShareRow key={a.id} title={a.title} share={s} onCreate={act(() => api('/shares', { method: 'POST', body: { scope: 'activity', activityId: a.id } }))} onStop={act(() => api('/shares/' + s.id + '/revoke', { method: 'POST' }))} />; })}
+    </section>
+  );
+}
+function PublicView({ token }) {
+  const [d, setD] = useState(null); const [err, setErr] = useState('');
+  useEffect(() => { document.title = 'CampusTrace'; fetch('/api/public/' + encodeURIComponent(token)).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'This link is not available'); setD(j); }).catch((x) => setErr(x.message)); }, [token]);
+  return (
+    <div className="shell"><header className="top glass"><div className="brand"><img src="/img/logo.png" alt="CampusTrace" /></div></header>
+      <main className="wrap">
+        {err && <section className="glass banner"><div><h2>{err}</h2><p className="muted">The owner may have stopped sharing it.</p></div></section>}
+        {!d && !err && <p className="muted">Loading…</p>}
+        {d && <><section className="glass hero"><div><p className="eyebrow">Verified participation</p><h2>{d.student.name}</h2><p className="lead">{d.student.department} · Year {d.student.year}</p><p className="muted small">Only items verified by the college are shown.</p></div></section>
+          <div className="grid">{d.activities.length === 0 && <p className="empty glass">No verified items yet.</p>}
+            {d.activities.map((a, i) => <article key={i} className="glass card"><h3>{a.title}</h3><p className="muted">{a.type}{a.organizer ? ' · ' + a.organizer : ''}</p><p>{new Date(a.date).toLocaleDateString()}</p><span className="badge verified"><b aria-hidden="true">✓</b> Verified</span></article>)}</div></>}
+      </main></div>
+  );
+}
+
+function Main() {
   const [user, setUser] = useState(null); const [ready, setReady] = useState(!hasToken()); const [view, setView] = useState('main'); const [seen, setSeen] = useState(!!sessionStorage.getItem('pp_seen')); const [auth, setAuth] = useState(''); const [askOut, setAskOut] = useState(false);
   useEffect(() => { if (hasToken()) api('/auth/me').then((r) => setUser(r.user)).catch(() => setToken('')).finally(() => setReady(true)); }, []);
   if (!ready) return <main className="center"><p className="muted">Loading…</p></main>;
@@ -338,3 +397,5 @@ export default function App() {
     </div>
   );
 }
+
+export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); return m ? <PublicView token={m[1]} /> : <Main />; }

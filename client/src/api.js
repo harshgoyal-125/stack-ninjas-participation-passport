@@ -8,7 +8,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   const res = await fetch('/api' + path, { method, headers, body: payload });
   const ct = res.headers.get('content-type') || '';
   const data = ct.includes('json') ? await res.json() : await res.blob();
-  if (!res.ok) { const e = new Error(data.error || 'Something went wrong'); e.status = res.status; throw e; }
+  if (!res.ok) { const e = new Error(data.error || 'Something went wrong'); e.status = res.status; e.help = !!data.help; throw e; }
   return data;
 }
 export async function openBlob(path, filename) {

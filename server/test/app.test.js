@@ -168,9 +168,12 @@ describe('first login, CSV import, counsellor scope', () => {
     const u = await User.findOne({ email: 'ravi@a.com' });
     expect(u.name).toBe('Ravi, K'); expect(u.mustChangePassword).toBe(true); expect(u.passwordHash).not.toContain('Secret'); expect(u.rollNo).toBe('R2');
     expect(await User.countDocuments()).toBe(4);
-    expect((await imp(t, 'name,email\nA,a@a.com\n')).status).toBe(400);
+    const bad = await imp(t, 'name,email\nA,a@a.com\n'); expect(bad.status).toBe(400); expect(bad.body.help).toBe(true);
     expect((await imp(await mk('hod', 'h@a.com', 'IT'), csv)).status).toBe(403);
     const again = await imp(t, csv); expect(again.body.created).toBe(0);
+    const noRoll = await imp(t, H + 'NoRoll,IT,1,1,nr@a.com,Secret-pass-1,G1,\n'); expect(noRoll.body.created).toBe(1);
+    const noRoll2 = await imp(t, H + 'NoRoll2,IT,1,1,nr2@a.com,Secret-pass-1,G1,\n'); expect(noRoll2.body.created).toBe(1);
+    const unreadable = await imp(t, 'hello\nworld\n'); expect(unreadable.status).toBe(400); expect(unreadable.body.help).toBe(true);
   });
   test('forced password change: blocked until changed, then works', async () => {
     const t = await mk('admin', 'ad@a.com', 'CSE');
@@ -203,5 +206,43 @@ describe('first login, CSV import, counsellor scope', () => {
     expect((await request(app).get('/api/activities').set('Authorization', 'Bearer ' + ho)).body.activities.length).toBe(2);
     const st = await request(app).get('/api/reports/students').set('Authorization', 'Bearer ' + c);
     expect(st.body.students.map((x) => x.name)).toEqual(['s1@a.com']);
+  });
+});
+
+describe('public sharing', () => {
+  const Share = require('../src/models/Share');
+  beforeEach(async () => { await Share.deleteMany({}); });
+  const verified = async (st, co, title) => { const id = (await submit(st, { title })).body.activity.id; await request(app).post(`/api/activities/${id}/review`).set('Authorization', 'Bearer ' + co).send({ decision: 'verify' }); return id; };
+  test('sharing is off by default; profile link shows only verified items and limited details', async () => {
+    const st = await reg('s1@a.com'), co = await mk('counsellor', 'c@a.com', 'IT');
+    const vId = await verified(st.token, co, 'Verified Hack'); await submit(st.token, { title: 'Pending Secret' });
+    expect((await request(app).get('/api/public/' + 'x'.repeat(32))).status).toBe(404);
+    const created = await request(app).post('/api/shares').set('Authorization', 'Bearer ' + st.token).send({ scope: 'profile' });
+    expect(created.status).toBe(201); const tok = created.body.share.token; expect(tok.length).toBeGreaterThanOrEqual(32);
+    const again = await request(app).post('/api/shares').set('Authorization', 'Bearer ' + st.token).send({ scope: 'profile' }); expect(again.body.share.token).toBe(tok);
+    const pub = await request(app).get('/api/public/' + tok);
+    expect(pub.status).toBe(200); expect(pub.headers['x-robots-tag']).toMatch(/noindex/); expect(pub.headers['cache-control']).toBe('no-store');
+    expect(pub.body.activities.map((a) => a.title)).toEqual(['Verified Hack']);
+    const text = JSON.stringify(pub.body); expect(text).not.toMatch(/Pending Secret|s1@a\.com|certificate|reviewNote|passwordHash|rollNo/);
+    expect(Object.keys(pub.body.student).sort()).toEqual(['department', 'name', 'year']);
+    // later change: record sent back -> drops out immediately
+    await Activity.updateOne({ _id: vId }, { status: 'changes_needed' });
+    expect((await request(app).get('/api/public/' + tok)).body.activities).toEqual([]);
+  });
+  test('single-activity link, ownership, revoke', async () => {
+    const a = await reg('a@a.com'), b = await reg('b@a.com'), co = await mk('counsellor', 'c@a.com', 'IT');
+    const idA = await verified(a.token, co, 'A One'); await verified(a.token, co, 'A Two'); const idPending = (await submit(a.token, { title: 'A Pending' })).body.activity.id;
+    const auth = (t, r) => r.set('Authorization', 'Bearer ' + t);
+    expect((await auth(b.token, request(app).post('/api/shares')).send({ scope: 'activity', activityId: idA })).status).toBe(400);
+    expect((await auth(a.token, request(app).post('/api/shares')).send({ scope: 'activity', activityId: idPending })).status).toBe(400);
+    const sh = await auth(a.token, request(app).post('/api/shares')).send({ scope: 'activity', activityId: idA });
+    expect(sh.status).toBe(201);
+    const pub = await request(app).get('/api/public/' + sh.body.share.token);
+    expect(pub.body.scope).toBe('activity'); expect(pub.body.activities.map((x) => x.title)).toEqual(['A One']);
+    expect((await auth(b.token, request(app).post(`/api/shares/${sh.body.share.id}/revoke`))).status).toBe(404);
+    expect((await auth(a.token, request(app).post(`/api/shares/${sh.body.share.id}/revoke`))).status).toBe(200);
+    expect((await request(app).get('/api/public/' + sh.body.share.token)).status).toBe(404);
+    expect((await auth(a.token, request(app).get('/api/shares'))).body.shares.length).toBe(0);
+    expect((await auth(co, request(app).post('/api/shares')).send({ scope: 'profile' })).status).toBe(403);
   });
 });
