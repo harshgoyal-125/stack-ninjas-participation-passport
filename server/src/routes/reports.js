@@ -93,7 +93,7 @@ router.get('/analytics', requireRole(...STAFF), async (req, res, next) => {
       const cs = await User.find(cq).select('name email department batch section group').lean();
       const all = students;
       const rows = cs.map((c) => {
-        const mine = all.filter((u) => u.department === c.department && ['batch', 'section', 'group'].every((k) => !c[k] || u[k] === c[k]));
+        const mine = all.filter((u) => u.department === c.department && ['section', 'group'].every((k) => !c[k] || u[k] === c[k]) && (!c.batch || !u.batch || u.batch === c.batch));
         return { name: c.name, email: c.email, department: c.department, batch: c.batch || '', section: c.section || '', group: c.group || '', students: mine.length, verified: mine.reduce((t, u) => t + (per.get(String(u._id)) || 0), 0) };
       });
       out.byCoordinator = rows.sort((a, b) => b.verified - a.verified);

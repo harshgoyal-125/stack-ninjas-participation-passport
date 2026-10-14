@@ -129,7 +129,7 @@ function Splash({ onDone }) {
 
 function Landing({ onLogin }) {
   const steps = [['01', 'Submit', 'A student adds an activity and uploads the certificate as proof.', 'Active', 'submitted'], ['02', 'Review', 'The Faculty Coordinator checks it, then verifies it or sends it back with a reason.', 'Under review', 'submitted'], ['03', 'Report', 'Reports and CSV exports count verified activities only.', 'Successful', 'verified']];
-  const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Faculty Coordinators', 'Review the students in your batch, section and group, with their certificates beside each record.'], ['Heads of Department', 'See department-wide verified participation, a per-coordinator breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
+  const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Faculty Coordinators', 'Review the students in your section and group, with their certificates beside each record.'], ['Heads of Department', 'See department-wide verified participation, a per-coordinator breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
   return (
     <div className="landing">
       <header className="top"><Logo size={36} /><div className="navlinks"><button className="btn outline small" onClick={onLogin}>Login</button></div></header>
@@ -359,8 +359,8 @@ function AdminUsers() {
         <label>Temporary password (8+)<PwInput minLength={8} required onChange={set('password')} /></label>
         <div className="row"><label>Role<select value={f.role} onChange={set('role')}>{['student', 'coordinator', 'hod'].map((r) => <option key={r} value={r}>{roleName(r)}</option>)}</select></label>
           <label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label></div>
-        {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Enrollment number<input onChange={set('enrollmentNo')} /></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
-        {(stu || cou) && <div className="row"><label>Batch<input onChange={set('batch')} /></label><label>Section<input onChange={set('section')} /></label><label>Group<select value={f.group || ''} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
+        {stu && <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Semester<select value={f.semester || ''} onChange={set('semester')}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((x) => <option key={x}>{x}</option>)}</select></label><label>Enrollment number<input onChange={set('enrollmentNo')} /></label><label>Roll number<input onChange={set('rollNo')} /></label></div>}
+        {(stu || cou) && <div className="row">{cou && <label>Batch (optional)<input onChange={set('batch')} /></label>}<label>Section<input onChange={set('section')} /></label><label>Group<select value={f.group || ''} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
         <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
         <button className="btn">Create</button>
       </form>
@@ -393,7 +393,7 @@ function EditUser({ u, onCancel, onDone }) {
         <label>Name<input required value={f.name} onChange={set('name')} /></label>
         <div className="row"><label>Department<select value={f.department} onChange={set('department')}>{DEPTS.map((d) => <option key={d}>{d}</option>)}</select></label>
           {u.role === 'student' && <><label>Year<select value={f.year} onChange={set('year')}><option value="">-</option>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label><label>Semester<select value={f.semester} onChange={set('semester')}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((y) => <option key={y}>{y}</option>)}</select></label></>}</div>
-        {(u.role === 'student' || u.role === 'coordinator') && <div className="row"><label>Batch<input value={f.batch} onChange={set('batch')} /></label><label>Section<input value={f.section} onChange={set('section')} /></label><label>Group<select value={f.group} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
+        {(u.role === 'student' || u.role === 'coordinator') && <div className="row">{u.role === 'coordinator' && <label>Batch (optional)<input value={f.batch} onChange={set('batch')} /></label>}<label>Section<input value={f.section} onChange={set('section')} /></label><label>Group<select value={f.group} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label></div>}
         {u.role === 'student' && <div className="row"><label>Enrollment no (never changes)<input value={f.enrollmentNo} onChange={set('enrollmentNo')} /></label><label>Roll number<input value={f.rollNo} onChange={set('rollNo')} /></label></div>}
         {u.role === 'student' && <p className="muted small">Changing branch moves the student's records to the new branch. Enrollment number stays the same.</p>}
         <Err e={err} />
@@ -495,7 +495,7 @@ function CsvImport({ onDone }) {
       <Err e={err} />
       <button type="button" className="link" onClick={() => setHelp(!help)} aria-expanded={help}>{help ? 'Hide CSV format help' : 'Show CSV format help'}</button>
       {help && <div className="note" role="region" aria-label="CSV format help"><p><b>The first row must be these column names</b> (any order, upper or lower case):</p>
-        <p className="small">name, branch, year, semester, email, initial password, group (G1 or G2), enrollment number (optional), roll number (optional), batch (optional), section (optional)</p>
+        <p className="small">name, branch, year, semester, email, initial password, group (G1 or G2), enrollment number (optional), roll number (optional), section (optional)</p>
         <ul className="small"><li>branch: CSE, IT, DS, ECE, EE, ME or CE</li><li>year: 1 to 4. semester: 1 to 8</li><li>email must be unique. Group must be G1 or G2. Enrollment number and roll number are optional but unique if given</li><li>initial password: 8 to 72 characters</li><li>Save as CSV (comma separated), max 200 rows, 1 MB</li></ul>
         <pre className="small" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{sample}</pre><button type="button" className="ghost" onClick={download}>Download template</button></div>}
       {res && <div role="status"><p className="ok">Created {res.created} student(s). {res.failed.length} row(s) skipped.</p>

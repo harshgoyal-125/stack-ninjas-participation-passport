@@ -362,6 +362,17 @@ describe('branch change, enrollment number, groups, DS', () => {
     expect(p1.body.users.length).toBe(10); expect(p1.body.total).toBeGreaterThan(30); expect(p1.body.page).toBe(2);
     expect((await request(app).get('/api/admin/users?q=sx@a.com').set(H(t))).body.total).toBe(1);
   });
+  test('student created without batch (with semester) is seen by a coordinator who has an old batch value, same section and group only', async () => {
+    const t = await mk('admin', 'ad@a.com', 'IT');
+    const b = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'IT', year: 2, semester: 4, batch: '2099', section: 'A', group: 'G1', ...extra });
+    const s1 = await request(app).post('/api/admin/users').set(H(t)).send(b({}));
+    expect(s1.status).toBe(201); expect(s1.body.user.semester).toBe(4); expect(s1.body.user.batch).toBeUndefined();
+    await request(app).post('/api/admin/users').set(H(t)).send(b({ group: 'G2' }));
+    const co = await User.create({ name: 'c', email: 'co@a.com', passwordHash: 'x', role: 'coordinator', department: 'IT', batch: '2024', section: 'A', group: 'G1' });
+    const tok = require('jsonwebtoken').sign({ sub: String(co._id), role: 'coordinator' }, process.env.JWT_SECRET);
+    const r = await request(app).get('/api/reports/student-list').set(H(tok));
+    expect(r.body.total).toBe(1); expect(r.body.students[0].group).toBe('G1');
+  });
   test('enrollment number is unique', async () => {
     const t = await mk('admin', 'ad@a.com', 'IT');
     const body = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'IT', year: 1, enrollmentNo: 'E1', ...extra });

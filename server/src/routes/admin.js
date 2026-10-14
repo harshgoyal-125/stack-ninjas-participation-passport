@@ -26,6 +26,7 @@ router.post('/users', async (req, res, next) => {
       if (b.semester !== undefined && b.semester !== '') { const s = Number(b.semester); if (!(s >= 1 && s <= 8)) return res.status(400).json({ error: 'Semester must be 1-8' }); doc.semester = s; }
     }
     for (const k of ['enrollmentNo', 'rollNo', 'batch', 'section']) if (str(b[k])) doc[k] = str(b[k]).slice(0, 30);
+    if (role !== 'coordinator') delete doc.batch;  // batch is entered for coordinators only; students are matched by section and group
     if (str(b.group)) { const g = User.normGroup(b.group); if (!g) return res.status(400).json({ error: 'Group must be G1 or G2' }); doc.group = g; }
     if (doc.enrollmentNo && await User.findOne({ enrollmentNo: doc.enrollmentNo })) return res.status(409).json({ error: 'Enrollment number already registered' });
     if (await User.findOne({ email })) return res.status(409).json({ error: 'Email already registered' });
