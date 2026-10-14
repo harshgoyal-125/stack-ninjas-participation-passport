@@ -47,7 +47,7 @@ function Auth({ onAuth, onBack }) {
   useEffect(() => { api('/auth/config').then((c) => { setSite(c.turnstileSiteKey || ''); setMail(!!c.resetEmail); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!site) return;
-    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
     if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
   }, [site]);
   async function go(e) {
@@ -69,7 +69,7 @@ function Auth({ onAuth, onBack }) {
         <p className="muted">Log in to your verified participation record.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={set('email')} /></label>
         <label>Password<PwInput required autoComplete="current-password" onChange={set('password')} /></label>
-        {site && <div ref={box} className="cf" />}
+        {site && <div ref={box} className="cf ts-box" />}
         <Err e={err} />
         <button className="btn" disabled={busy || (!!site && !tok)}>Log in</button>
         <button type="button" className="link" onClick={() => setForgot(true)}>Forgot password?</button>
@@ -390,7 +390,7 @@ function Forgot({ onBack, mail, site }) {
   const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
   useEffect(() => {
     if (!site || !mail) return;
-    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
     if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
   }, [site, mail]);
   const [email, setEmail] = useState(''); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
@@ -401,7 +401,7 @@ function Forgot({ onBack, mail, site }) {
       {mail ? <>
         <p className="muted">Enter your account email. If it exists, we send a link that works for 30 minutes.</p>
         <label>Email<input type="email" required autoComplete="email" onChange={(e) => setEmail(e.target.value)} /></label>
-        {site && <div ref={box} className="cf" />}
+        {site && <div ref={box} className="cf ts-box" />}
         <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
         <button className="btn" disabled={busy || (!!site && !tok)}>Send reset link</button></>
         : <p className="muted">Email reset is not switched on yet. Ask your college administrator to set a temporary password for you.</p>}

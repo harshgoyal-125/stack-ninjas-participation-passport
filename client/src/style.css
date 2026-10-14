@@ -461,3 +461,53 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 [data-theme=light] .lp-sec [class*=kick],[data-theme=light] .lp-sec small{color:#9cc4ff}
 [data-theme=light] .link,[data-theme=light] a{color:#9fd0ff!important}
 [data-theme=light] .link:hover,[data-theme=light] a:hover{color:#d6ecff!important}
+
+/* polish v4: one design system. radii 18/12/pill, crisp 1px borders, light blur, readable hover. Revert tag: pre-polish */
+:root:root:root{--r-card:18px;--r-ctl:12px;--bd:rgba(255,255,255,.3);--bd-h:rgba(255,255,255,.6);--txt:#F4F8FF;--txt2:#CFDCF7;--focus:#BCD6FF}
+:root:root:root .glass,:root:root:root .card,:root:root:root .vcard,:root:root:root .auth.card,:root:root:root .hero,:root:root:root .step,:root:root:root .role,:root:root:root .stats{border-radius:var(--r-card);background:linear-gradient(180deg,rgba(255,255,255,.15),rgba(255,255,255,.06)),linear-gradient(135deg,rgba(130,170,255,.14),rgba(80,220,230,.06));backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.4);color:var(--txt)}
+:root:root:root .card::after,:root:root:root .vcard::after,:root:root:root .auth.card::after{content:none;display:none}
+:root:root:root .card:hover,:root:root:root .step:hover,:root:root:root .role:hover,:root:root:root .state:hover{transform:translateY(-2px);border-color:var(--bd-h);box-shadow:0 12px 28px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.5)}
+:root:root:root .top{background:rgba(18,26,66,.82)!important;backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);box-shadow:none}
+:root:root:root .btn,:root:root:root .btn.big,:root:root:root .btn.small{background:linear-gradient(135deg,#7FA8FF,#5EEAD4);color:#07122E;border:1px solid rgba(255,255,255,.55);border-radius:var(--r-ctl);font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.6);text-shadow:none;transform:none;filter:none}
+:root:root:root .btn:hover,:root:root:root .btn:focus-visible,:root:root:root .btn.big:hover,:root:root:root .btn.small:hover{background:linear-gradient(135deg,#A6C3FF,#84F3E1);color:#050E26;transform:translateY(-1px);filter:none;box-shadow:0 8px 20px rgba(0,0,0,.34),inset 0 1px 0 #fff}
+:root:root:root .btn:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+:root:root:root .btn:disabled,:root:root:root button:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none}
+:root:root:root .btn.outline,:root:root:root .ghost,:root:root:root .theme-toggle,:root:root:root .tabs button,:root:root:root .chips button{background:rgba(255,255,255,.12);color:var(--txt);border:1px solid var(--bd);border-radius:var(--r-ctl);box-shadow:none;backdrop-filter:none;text-shadow:none;font-weight:600}
+:root:root:root .tabs button,:root:root:root .chips button,:root:root:root .theme-toggle{border-radius:999px}
+:root:root:root .btn.outline:hover,:root:root:root .ghost:hover,:root:root:root .theme-toggle:hover,:root:root:root .tabs button:hover,:root:root:root .chips button:hover,:root:root:root .btn.outline:focus-visible,:root:root:root .ghost:focus-visible,:root:root:root .theme-toggle:focus-visible,:root:root:root .tabs button:focus-visible,:root:root:root .chips button:focus-visible{background:rgba(255,255,255,.28);color:#fff;border-color:var(--bd-h);transform:none;box-shadow:none}
+:root:root:root .tabs button[aria-selected=true],:root:root:root .chips button[aria-pressed=true]{background:rgba(127,168,255,.42);color:#fff;border-color:#B5CEFF;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+:root:root:root .tabs button[aria-selected=true]:hover,:root:root:root .chips button[aria-pressed=true]:hover{background:rgba(127,168,255,.55);color:#fff}
+:root:root:root .link,:root:root:root .link:hover,:root:root:root a,:root:root:root .lp-copy a{color:#A8D2FF;text-decoration:underline;text-underline-offset:3px;background:none;border:0}
+:root:root:root .link:hover,:root:root:root a:hover{color:#fff}
+:root:root:root .pw-eye{color:var(--txt2);border-radius:8px}
+:root:root:root .pw-eye:hover,:root:root:root .pw-eye:focus-visible{color:#fff;background:rgba(255,255,255,.2)}
+:root:root:root .rowbtn:hover{background:rgba(255,255,255,.1);color:var(--txt)}
+:root:root:root .avatar:hover,:root:root:root .avatar:focus-visible{box-shadow:0 0 0 3px var(--focus);color:#07122E}
+:root:root:root input,:root:root:root select,:root:root:root textarea{background:rgba(8,14,44,.5)!important;color:var(--txt)!important;border:1px solid var(--bd)!important;border-radius:var(--r-ctl)!important;box-shadow:none;font:inherit;backdrop-filter:none}
+:root:root:root input:hover,:root:root:root select:hover,:root:root:root textarea:hover{border-color:var(--bd-h)!important}
+:root:root:root input:focus,:root:root:root select:focus,:root:root:root textarea:focus{outline:none;border-color:var(--focus)!important;box-shadow:0 0 0 3px rgba(188,214,255,.35)!important}
+:root:root:root input::placeholder,:root:root:root textarea::placeholder{color:#9FB2DC}
+:root:root:root option{background:#fff;color:#07122E}
+:root:root:root input:-webkit-autofill,:root:root:root input:-webkit-autofill:hover,:root:root:root input:-webkit-autofill:focus{-webkit-text-fill-color:#F4F8FF;caret-color:#fff;-webkit-box-shadow:0 0 0 1000px #0E1740 inset!important;box-shadow:0 0 0 1000px #0E1740 inset!important}
+:root:root:root label{color:var(--txt);font-weight:600}
+:root:root:root :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+:root:root:root table{border-collapse:collapse;width:100%}
+:root:root:root th{color:var(--txt2);font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--bd)}
+:root:root:root td{color:var(--txt);border-top:1px solid rgba(255,255,255,.14)}
+:root:root:root tbody tr:hover{background:rgba(255,255,255,.07)}
+:root:root:root .muted,:root:root:root .small,:root:root:root .hero p,:root:root:root .lead,:root:root:root .lp-copy .lead{color:var(--txt2)}
+:root:root:root .avatar-pop.glass,:root:root:root .dialog.glass,:root:root:root .overlay .dialog{background:#17214F!important;border:1px solid var(--bd);border-radius:var(--r-card);backdrop-filter:none;box-shadow:0 24px 60px rgba(0,0,0,.55);color:var(--txt)}
+:root:root:root .overlay{background:rgba(5,9,28,.72);backdrop-filter:none}
+:root:root:root .mile,:root:root:root .fchip,:root:root:root .pill-badge{background:rgba(255,255,255,.14);color:var(--txt);border:1px solid var(--bd);border-radius:999px;box-shadow:none;backdrop-filter:none}
+.ts-box{display:flex;justify-content:center;align-items:center;min-height:65px;margin:12px 0;border-radius:12px;overflow:hidden}.ts-box iframe{border-radius:12px}
+:root:root:root .top a,:root:root:root .top a:hover,:root:root:root nav a,:root:root:root .tabs a,:root:root:root a.btn,:root:root:root a.ghost{text-decoration:none;color:var(--txt)}
+:root:root:root .top a:hover{color:#fff}
+:root:root:root .top [aria-current=page],:root:root:root .top .active{border-bottom:2px solid #9FC0FF}
+:root:root:root .wordmark em,:root:root:root .wordmark span:last-child{color:#8FD3FF!important;-webkit-text-fill-color:#8FD3FF;background:none}
+:root:root:root .navlinks .link{text-decoration:none;color:var(--txt);font-weight:600;padding:8px 4px;border-bottom:2px solid transparent;border-radius:0}
+:root:root:root .navlinks .link:hover{color:#fff;border-bottom-color:rgba(255,255,255,.6)}
+:root:root:root .navlinks .link[aria-current=page]{color:#fff;border-bottom-color:#9FC0FF}
+:root:root:root .auth-art h2,:root:root:root .auth-art h2 *{color:#F4F8FF}
+:root:root:root .auth-art p{color:var(--txt2)}
+:root:root:root .wordmark{color:#fff}
+:root:root:root .wordmark b,:root:root:root .vword b,:root:root:root .intro-word b{background:linear-gradient(90deg,#A9C4FF,#7FE7FF);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
