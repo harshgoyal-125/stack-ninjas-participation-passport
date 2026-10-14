@@ -239,6 +239,32 @@ function ChartPanel({ an }) {
     </section>
   );
 }
+function AddStudent({ user }) {
+  const blank = { name: '', email: '', password: '', year: '1', semester: '1', enrollmentNo: '', rollNo: '', section: '', group: '' };
+  const [f, setF] = useState(blank); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  async function go(e) {
+    e.preventDefault(); setErr(''); setMsg(''); setBusy(true);
+    try { const r = await api('/coordinator/students', { method: 'POST', body: f }); setMsg('Added ' + r.student.name + ' (' + r.student.email + '). They must change the temporary password at first login.'); setF(blank); } catch (x) { setErr(x.message); } finally { setBusy(false); }
+  }
+  return (
+    <>
+      <h2>Add a student</h2>
+      <p className="muted">For a student the admin missed. They are added to {user.department}{user.section ? ', section ' + user.section : ''}{user.group ? ', group ' + user.group : ''}, your own scope. You cannot choose another branch or group.</p>
+      <form className="glass card form" onSubmit={go}>
+        <label>Name<input required value={f.name} maxLength={80} onChange={set('name')} /></label>
+        <label>Email<input type="email" required value={f.email} onChange={set('email')} /></label>
+        <label>Temporary password (8+)<PwInput minLength={8} required value={f.password} onChange={set('password')} /></label>
+        <div className="row"><label>Year<select value={f.year} onChange={set('year')}>{[1, 2, 3, 4].map((y) => <option key={y}>{y}</option>)}</select></label>
+          <label>Semester<select value={f.semester} onChange={set('semester')}>{[1, 2, 3, 4, 5, 6, 7, 8].map((x) => <option key={x}>{x}</option>)}</select></label></div>
+        <div className="row"><label>Enrollment number<input required value={f.enrollmentNo} maxLength={30} onChange={set('enrollmentNo')} /></label><label>Roll number (optional)<input value={f.rollNo} maxLength={30} onChange={set('rollNo')} /></label></div>
+        {(!user.section || !user.group) && <div className="row">{!user.section && <label>Section<input value={f.section} maxLength={10} onChange={set('section')} /></label>}{!user.group && <label>Group<select required value={f.group} onChange={set('group')}><option value="">-</option>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label>}</div>}
+        <Err e={err} />{msg && <p className="ok" role="status">{msg}</p>}
+        <button className="btn" disabled={busy}>{busy ? 'Adding...' : 'Add student'}</button>
+      </form>
+    </>
+  );
+}
 function Review({ user }) {
   const [list, setList] = useState([]); const [filter, setFilter] = useState('submitted'); const [err, setErr] = useState(''); const [note, setNote] = useState({}); const [page, setPage] = useState(1); const [meta, setMeta] = useState({ pages: 1, total: 0 });
   const load = () => api('/activities?pageSize=20&page=' + page + '&status=' + filter).then((r) => { setList(r.activities); setMeta({ pages: r.pages, total: r.total }); }).catch((e) => setErr(e.message));
@@ -647,12 +673,12 @@ function Main() {
     <div className="shell">
       <header className="top"><Logo size={34} />
         <div className="navlinks">{!staff && <><button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => { setView('main'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</button></>}
-          {staff && <>{user.role === 'coordinator' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
+          {staff && <>{user.role === 'coordinator' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}{user.role === 'coordinator' && <button className="link" aria-current={view === 'add' ? 'page' : undefined} onClick={() => setView('add')}>Add student</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
           <Avatar user={user} onProfile={() => setView('profile')} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
       <main className="wrap" key={view}>
         {view === 'profile' && <Profile user={user} onBack={() => setView('main')} onChangePw={() => setAskPw(true)} onLogout={() => setAskOut(true)} />}
         {view !== 'profile' && user.role === 'student' && <Student user={user} />}
-        {view !== 'profile' && user.role === 'coordinator' && (view === 'reports' ? <Reports user={user} /> : <Review user={user} />)}
+        {view !== 'profile' && user.role === 'coordinator' && (view === 'reports' ? <Reports user={user} /> : view === 'add' ? <AddStudent user={user} /> : <Review user={user} />)}
         {view !== 'profile' && ['admin', 'hod'].includes(user.role) && <Reports user={user} />}
       </main>
       {askPw && <ChangePassword onCancel={() => setAskPw(false)} onDone={(u) => { setAskPw(false); setUser(u); }} />}

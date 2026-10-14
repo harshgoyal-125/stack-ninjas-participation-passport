@@ -7,6 +7,7 @@ const { router: auth } = require('./routes/auth');
 const activities = require('./routes/activities');
 const reports = require('./routes/reports');
 const admin = require('./routes/admin');
+const coordinator = require('./routes/coordinator');
 const { router: shares, publicRouter } = require('./routes/shares');
 
 // Rejects any request body/query key that starts with "$" or contains "." (NoSQL operator injection like {"$ne": ""}).
@@ -41,6 +42,7 @@ function createApp() {
   app.use('/api/activities', activities);
   app.use('/api/reports', reports);
   app.use('/api/admin', admin);
+  app.use('/api/coordinator', coordinator);
   app.use('/api/shares', shares);
   const publicLimiter = process.env.NODE_ENV === 'test' ? (q, s, n) => n() : rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false });
   app.use('/api/public', publicLimiter, publicRouter);

@@ -373,6 +373,20 @@ describe('branch change, enrollment number, groups, DS', () => {
     const r = await request(app).get('/api/reports/student-list').set(H(tok));
     expect(r.body.total).toBe(1); expect(r.body.students[0].group).toBe('G1');
   });
+  test('coordinator adds a student only inside own branch/section/group; others blocked; duplicates blocked', async () => {
+    const co = await User.create({ name: 'c', email: 'co@a.com', passwordHash: 'x', role: 'coordinator', department: 'IT', section: 'A', group: 'G1' });
+    const ct = require('jsonwebtoken').sign({ sub: String(co._id), role: 'coordinator' }, process.env.JWT_SECRET);
+    const body = (x = {}) => ({ name: 'New Kid', email: 'kid' + Math.random() + '@a.com', password: 'Str0ng-pass-1', year: 2, semester: 3, enrollmentNo: 'ENR' + Math.random(), ...x });
+    const r = await request(app).post('/api/coordinator/students').set(H(ct)).send(body({ department: 'CSE', group: 'G2', section: 'Z', role: 'admin' }));
+    expect(r.status).toBe(201); expect(r.body.student.department).toBe('IT'); expect(r.body.student.group).toBe('G1'); expect(r.body.student.section).toBe('A');
+    const saved = await User.findById(r.body.student.id); expect(saved.role).toBe('student'); expect(saved.mustChangePassword).toBe(true); expect(saved.passwordHash).not.toContain('Str0ng');
+    expect((await request(app).post('/api/coordinator/students').set(H(ct)).send(body({ enrollmentNo: '' }))).status).toBe(400);
+    expect((await request(app).post('/api/coordinator/students').set(H(ct)).send(body({ semester: 9 }))).status).toBe(400);
+    expect((await request(app).post('/api/coordinator/students').set(H(ct)).send(body({ enrollmentNo: saved.enrollmentNo }))).status).toBe(409);
+    expect((await request(app).post('/api/coordinator/students').set(H(ct)).send(body({ email: saved.email }))).status).toBe(409);
+    for (const role of ['student', 'hod', 'admin']) { const u = await mk(role, role + '@a.com', 'IT'); expect((await request(app).post('/api/coordinator/students').set(H(u)).send(body())).status).toBe(403); }
+    expect((await request(app).post('/api/coordinator/students').send(body())).status).toBe(401);
+  });
   test('enrollment number is unique', async () => {
     const t = await mk('admin', 'ad@a.com', 'IT');
     const body = (extra) => ({ name: 'n', email: 'n' + Math.random() + '@a.com', password: 'Str0ng-pass-1', role: 'student', department: 'IT', year: 1, enrollmentNo: 'E1', ...extra });
