@@ -1,0 +1,1 @@
+try{var s=localStorage.getItem("pp_theme");document.documentElement.dataset.theme=s?(s==="dark"?"dark":"light"):(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){document.documentElement.dataset.theme="light"}

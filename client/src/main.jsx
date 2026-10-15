@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './style.css';
-try { document.documentElement.dataset.theme = localStorage.getItem('pp_theme') === 'dark' ? 'dark' : 'light'; } catch (e) { document.documentElement.dataset.theme = 'light'; }
+try { const sv = localStorage.getItem('pp_theme'); document.documentElement.dataset.theme = sv ? (sv === 'dark' ? 'dark' : 'light') : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) { document.documentElement.dataset.theme = 'light'; }
 createRoot(document.getElementById('root')).render(<App />);
 
 // Gentle 3D tilt on plain content cards. Desktop with a mouse only, never with reduced motion, never on forms.

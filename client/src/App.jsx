@@ -35,10 +35,10 @@ function PwInput(props) {
     </span>
   );
 }
-function ThemeToggle() {
+function ThemeToggle({ inline }) {
   const [t, setT] = useState(document.documentElement.dataset.theme || 'light');
   function flip() { const h = document.documentElement; h.classList.add('theme-fade'); setTimeout(() => h.classList.remove('theme-fade'), 500); const n = t === 'light' ? 'dark' : 'light'; document.documentElement.dataset.theme = n; try { localStorage.setItem('pp_theme', n); } catch (e) { /* private mode */ } setT(n); }
-  return <button type="button" className="theme-toggle" onClick={flip} aria-pressed={t === 'dark'} aria-label={t === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}>{t === 'light' ? '☾ Dark' : '☀ Light'}</button>;
+  return <button type="button" className={inline ? 'theme-toggle inline' : 'theme-toggle'} onClick={flip} aria-pressed={t === 'dark'} aria-label={t === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}>{t === 'light' ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg> : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>}</button>;
 }
 function Err({ e }) { return e ? <p className="err" role="alert">{e}</p> : null; }
 
@@ -49,7 +49,7 @@ function Auth({ onAuth, onBack }) {
   useEffect(() => { api('/auth/config').then((c) => { setSite(c.turnstileSiteKey || ''); setMail(!!c.resetEmail); }).catch(() => {}); }, []);
   useEffect(() => {
     if (!site) return;
-    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
     if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
   }, [site]);
   async function go(e) {
@@ -132,7 +132,7 @@ function Landing({ onLogin }) {
   const who = [['Students', 'Upload certificates, follow each status, and share a link or QR to your verified items only.'], ['Faculty Coordinators', 'Review the students in your section and group, with their certificates beside each record.'], ['Heads of Department', 'See department-wide verified participation, a per-coordinator breakdown and every student list. Read-only.'], ['Admins', 'Create accounts one by one or from a CSV, set roles and groups, and remove accounts made by mistake.']];
   return (
     <div className="landing">
-      <header className="top"><Logo size={36} /><div className="navlinks"><button className="btn outline small" onClick={onLogin}>Login</button></div></header>
+      <header className="top"><Logo size={36} /><div className="navlinks"><ThemeToggle inline /><button className="btn outline small" onClick={onLogin}>Login</button></div></header>
       <main className="lp">
         <section className="lp-hero">
           <div className="lp-copy">
@@ -447,7 +447,7 @@ function Forgot({ onBack, mail, site }) {
   const [tok, setTok] = useState(''); const box = React.useRef(null); const wid = React.useRef(null);
   useEffect(() => {
     if (!site || !mail) return;
-    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: 'dark', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
+    const mount = () => { if (window.turnstile && box.current && wid.current === null) wid.current = window.turnstile.render(box.current, { sitekey: site, theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', size: 'flexible', callback: setTok, 'expired-callback': () => setTok(''), 'error-callback': () => setTok('') }); };
     if (window.turnstile) mount(); else { const sc = document.createElement('script'); sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; sc.async = true; sc.onload = mount; document.head.appendChild(sc); }
   }, [site, mail]);
   const [email, setEmail] = useState(''); const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
@@ -647,7 +647,7 @@ function PublicView({ token }) {
   const [d, setD] = useState(null); const [err, setErr] = useState('');
   useEffect(() => { document.title = 'CampusTrace'; fetch('/api/public/' + encodeURIComponent(token)).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'This link is not available'); setD(j); }).catch((x) => setErr(x.message)); }, [token]);
   return (
-    <div className="shell"><header className="top"><Logo size={34} /></header>
+    <div className="shell"><header className="top"><Logo size={34} /><div className="navlinks"><ThemeToggle inline /></div></header>
       <main className="wrap">
         {err && <section className="glass banner"><div><h2>{err}</h2><p className="muted">The owner may have stopped sharing it.</p></div></section>}
         {!d && !err && <p className="muted">Loading…</p>}
@@ -674,7 +674,7 @@ function Main() {
       <header className="top"><Logo size={34} />
         <div className="navlinks">{!staff && <><button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => { setView('main'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</button></>}
           {staff && <>{user.role === 'coordinator' && <button className="link" aria-current={view === 'main' ? 'page' : undefined} onClick={() => setView('main')}>Review</button>}{user.role === 'coordinator' && <button className="link" aria-current={view === 'add' ? 'page' : undefined} onClick={() => setView('add')}>Add student</button>}<button className="link" aria-current={view === 'reports' || ['admin', 'hod'].includes(user.role) ? 'page' : undefined} onClick={() => setView('reports')}>Reports</button></>}
-          <Avatar user={user} onProfile={() => setView('profile')} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
+          <ThemeToggle inline /><Avatar user={user} onProfile={() => setView('profile')} onLogout={() => setAskOut(true)} onChangePw={() => setAskPw(true)} /></div></header>
       <main className="wrap" key={view}>
         {view === 'profile' && <Profile user={user} onBack={() => setView('main')} onChangePw={() => setAskPw(true)} onLogout={() => setAskOut(true)} />}
         {view !== 'profile' && user.role === 'student' && <Student user={user} />}
@@ -687,4 +687,4 @@ function Main() {
   );
 }
 
-export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); const r = location.pathname.match(/^\/reset\/([a-f0-9]{64})\/?$/); return <>{r ? <ResetPage token={r[1]} /> : m ? <PublicView token={m[1]} /> : <Main />}<ThemeToggle /></>; }
+export default function App() { const m = location.pathname.match(/^\/p\/([\w-]+)\/?$/); const r = location.pathname.match(/^\/reset\/([a-f0-9]{64})\/?$/); return <>{r ? <ResetPage token={r[1]} /> : m ? <PublicView token={m[1]} /> : <Main />}{(r || m) && <ThemeToggle />}</>; }
