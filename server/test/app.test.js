@@ -209,6 +209,8 @@ describe('first login, CSV import, counsellor scope', () => {
     const H = (t) => ({ Authorization: 'Bearer ' + t });
     const an = await request(app).get('/api/reports/analytics').set(H(c));
     expect(an.body.students).toBe(1); expect(an.body.totals.verified).toBe(1); expect(an.body.charts.event[0].key).toBe('One'); expect(an.body.byCoordinator).toBeUndefined();
+    const anX = await request(app).get('/api/reports/analytics?group=G2&section=B').set(H(c));
+    expect(anX.body.students).toBe(1); expect(anX.body.charts.event.map((e) => e.key)).toEqual(['One']); // coordinator cannot widen scope to another group
     const anH = await request(app).get('/api/reports/analytics').set(H(ho));
     expect(anH.body.students).toBe(2); expect(anH.body.byCoordinator.length).toBe(1); expect(anH.body.byCoordinator[0].students).toBe(1); expect(anH.body.byCoordinator[0].verified).toBe(1);
     expect((await request(app).get('/api/reports/analytics?year=3').set(H(ho))).body.students).toBe(0);

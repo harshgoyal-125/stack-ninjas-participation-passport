@@ -59,7 +59,7 @@ router.get('/analytics', requireRole(...STAFF), async (req, res, next) => {
     const sq = await studentQuery(req.user);
     if (year) sq.year = year; if (sem) sq.semester = sem;
     if (req.user.role === 'admin' && User.DEPARTMENTS.includes(req.query.department)) sq.department = req.query.department;
-    for (const k of ['section', 'group']) if (typeof req.query[k] === 'string' && req.query[k].trim()) sq[k] = req.query[k].trim().slice(0, 10);
+    if (req.user.role !== 'coordinator') for (const k of ['section', 'group']) if (typeof req.query[k] === 'string' && req.query[k].trim()) sq[k] = req.query[k].trim().slice(0, 10);
     const students = await User.find(sq).select('year department batch section group').lean();
     const ids = students.map((x) => x._id);
     const base = { ...(await activityScope(req.user)), student: { $in: ids } };
