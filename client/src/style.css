@@ -525,48 +525,48 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 :root:root:root .chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 :root:root:root .chart-head h3{margin:0}
 :root:root:root td,:root:root:root .srow b,:root:root:root .srow p{overflow-wrap:anywhere}
-/* vibrant, gently moving background: colour layers only, moved with transform (GPU), nothing else changes */
-@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-3%,2.5%,0) scale(1.07)}100%{transform:translate3d(3%,-2%,0) scale(1.03)}}
-html body::before{inset:-14%!important;will-change:transform;animation:drift 26s ease-in-out infinite alternate!important}
-html[data-theme=dark] body::before{background:radial-gradient(640px 480px at 10% 8%,rgba(124,58,237,.55),transparent 64%),radial-gradient(600px 460px at 90% 10%,rgba(34,211,238,.42),transparent 64%),radial-gradient(620px 480px at 84% 90%,rgba(236,72,153,.34),transparent 64%),radial-gradient(560px 440px at 12% 92%,rgba(59,130,246,.42),transparent 64%),radial-gradient(420px 320px at 50% 50%,rgba(99,102,241,.22),transparent 66%)!important}
-html[data-theme=light] body::before{background:radial-gradient(700px 520px at 8% 6%,rgba(129,140,248,.9),transparent 65%),radial-gradient(640px 500px at 94% 8%,rgba(34,190,238,.78),transparent 65%),radial-gradient(620px 470px at 86% 92%,rgba(45,212,191,.66),transparent 65%),radial-gradient(580px 450px at 6% 94%,rgba(192,102,240,.62),transparent 65%),radial-gradient(440px 340px at 52% 48%,rgba(244,114,182,.34),transparent 66%),linear-gradient(180deg,#34407a,#1d2650)!important}
-@media (max-width:700px){html body::before{animation-duration:38s!important}}
-@media (prefers-reduced-motion:reduce){html body::before{animation:none!important;will-change:auto}}
-/* frosted-glass look: blurred glossy orbs behind frosted panels (colour/background layers only) */
-@keyframes orbs{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(2.5%,-2%,0) scale(1.05)}100%{transform:translate3d(-2.5%,2.5%,0) scale(1.02)}}
-@keyframes spheres{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(-1.5%,2%,0)}100%{transform:translate3d(1.5%,-1.5%,0)}}
-html body{background:#0a0b2c!important}
-html[data-theme=light] body{background:#1b1f5e!important}
-/* soft blurred amber, violet and blue blobs (layer 1) */
-html[data-theme] body::before{inset:-10%!important;z-index:-2!important;filter:blur(26px);animation:orbs 30s ease-in-out infinite alternate!important;
-  background:radial-gradient(560px 460px at 94% 14%,rgba(255,176,64,.78),rgba(255,140,60,.25) 55%,transparent 72%),
-    radial-gradient(620px 520px at 6% 90%,rgba(255,170,70,.7),rgba(255,130,60,.22) 55%,transparent 72%),
-    radial-gradient(520px 420px at 92% 88%,rgba(255,184,80,.55),transparent 70%),
-    radial-gradient(600px 500px at 14% 8%,rgba(52,92,255,.6),transparent 68%),
-    radial-gradient(520px 440px at 52% 52%,rgba(126,80,230,.5),transparent 70%),
-    linear-gradient(160deg,#0a0b2c,#171449 55%,#0d0f3a)!important}
-html[data-theme=light] body::before{background:radial-gradient(560px 460px at 94% 14%,rgba(255,186,84,.85),rgba(255,150,70,.3) 55%,transparent 72%),
-    radial-gradient(620px 520px at 6% 90%,rgba(255,180,84,.78),rgba(255,140,70,.26) 55%,transparent 72%),
-    radial-gradient(520px 420px at 92% 88%,rgba(255,196,100,.6),transparent 70%),
-    radial-gradient(600px 500px at 14% 8%,rgba(70,112,255,.7),transparent 68%),
-    radial-gradient(520px 440px at 52% 52%,rgba(150,100,245,.58),transparent 70%),
-    linear-gradient(160deg,#1b1f5e,#2a2380 55%,#1a2166)!important}
-/* glossy blue spheres with a faint ring (layer 2) */
-html[data-theme] body::after{inset:-4%!important;z-index:-1!important;opacity:1!important;-webkit-mask-image:none!important;mask-image:none!important;filter:none;animation:spheres 34s ease-in-out infinite alternate!important;
-  background-image:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 30%),radial-gradient(circle closest-side,#6f8cff 0,#3a52e8 55%,#141c78 96%,transparent 100%),
-    radial-gradient(circle at 34% 28%,rgba(255,255,255,.9) 0,rgba(255,255,255,0) 32%),radial-gradient(circle closest-side,#5b78ff 0,#2f48dc 58%,#10186e 96%,transparent 100%),
-    radial-gradient(circle at 34% 28%,rgba(255,255,255,.9) 0,rgba(255,255,255,0) 32%),radial-gradient(circle closest-side,#ffd27a 0,#ff9a3c 62%,#c9601a 96%,transparent 100%),
-    radial-gradient(circle closest-side,transparent 78%,rgba(170,190,255,.3) 79%,transparent 82%)!important;
-  background-size:150px 150px,150px 150px,60px 60px,60px 60px,76px 76px,76px 76px,320px 320px!important;
-  background-position:34% 66%,34% 66%,3% 38%,3% 38%,90% 14%,90% 14%,34% 66%!important;background-repeat:no-repeat!important}
-/* frosted panels: dark tint keeps white text readable over the bright blobs */
-:root:root:root .glass,:root:root:root .card,:root:root:root .vcard,:root:root:root .auth.card,:root:root:root .hero,:root:root:root .step,:root:root:root .role,:root:root:root .stats{
-  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.04)),rgba(26,28,98,.46)!important;
-  backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);
-  border:1px solid rgba(255,255,255,.3)!important;
-  box-shadow:0 14px 44px rgba(4,4,40,.4),inset 0 0 30px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.4)!important}
-:root:root:root .top{background:rgba(26,28,98,.5)!important;backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);border-bottom:1px solid rgba(255,255,255,.25)}
-:root:root:root input,:root:root:root select,:root:root:root textarea{background:rgba(12,14,64,.5)!important;border:1px solid rgba(255,255,255,.28)!important}
-:root:root:root .tabs button,:root:root:root .chip,:root:root:root .ghost{border-color:rgba(255,255,255,.4)}
-@media (max-width:700px){html[data-theme] body::before{filter:blur(18px);animation-duration:44s!important}html[data-theme] body::after{animation-duration:50s!important;background-size:96px 96px,96px 96px,40px 40px,40px 40px,48px 48px,48px 48px,210px 210px!important}:root:root:root .glass,:root:root:root .card,:root:root:root .hero,:root:root:root .top{backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}}
-@media (prefers-reduced-motion:reduce){html[data-theme] body::before,html[data-theme] body::after{animation:none!important}}
+
+/* ---- shared type and spacing tokens (one font family, one scale, one rhythm) ---- */
+:root:root:root{--font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --fs-h2:1.6rem;--fs-h3:1.15rem;--fs-body:1rem;--fs-muted:.95rem;--fs-small:.85rem;--fs-label:.875rem;--fs-btn:.9375rem;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--card-pad:24px;--stack:20px;--gap:16px}
+:root:root:root body,:root:root:root button,:root:root:root input,:root:root:root select,:root:root:root textarea,:root:root:root table{font-family:var(--font)}
+:root:root:root body{font-size:var(--fs-body);line-height:1.5}
+:root:root:root .wrap>h2{font-size:var(--fs-h2);font-weight:700;line-height:1.25;margin:0 0 var(--sp-1)}
+:root:root:root .card h3,:root:root:root .glass h3,:root:root:root .dialog h2{font-size:var(--fs-h3);font-weight:700;line-height:1.3;margin:0}
+:root:root:root .muted{font-size:var(--fs-muted);line-height:1.5}
+:root:root:root .small,:root:root:root .muted.small{font-size:var(--fs-small)}
+:root:root:root label{font-size:var(--fs-label);font-weight:600;line-height:1.3}
+:root:root:root input,:root:root:root select,:root:root:root textarea{font-size:var(--fs-body);font-weight:500;min-height:44px}
+:root:root:root .btn,:root:root:root .btn.big,:root:root:root .btn.small,:root:root:root .ghost,:root:root:root .link,:root:root:root .tabs button,:root:root:root .chip,:root:root:root .pw-eye,:root:root:root .theme-toggle{font-size:var(--fs-btn);font-weight:700;line-height:1.2}
+:root:root:root .pw-eye{font-size:var(--fs-small)}
+/* spacing rhythm: page stack 20, card padding 24, inside a card 12, rows and grids 16 */
+:root:root:root .wrap{gap:var(--stack)}
+:root:root:root .card,:root:root:root .auth.card{padding:var(--card-pad);gap:var(--sp-3)}
+:root:root:root .auth,:root:root:root .form{gap:var(--sp-3);padding:var(--card-pad)}
+:root:root:root .row{gap:var(--gap)}
+:root:root:root .filters{gap:var(--gap);padding:var(--sp-4);margin:0}
+:root:root:root .kpis{gap:var(--gap);margin:0}
+:root:root:root .charts{gap:var(--gap)}
+:root:root:root .kpi{padding:var(--sp-4)}
+:root:root:root .srow{padding:var(--sp-3) 0;gap:var(--gap)}
+:root:root:root .wrap p{margin-top:0}
+:root:root:root th,:root:root:root td{padding:var(--sp-3) var(--sp-3);font-size:var(--fs-muted)}
+:root:root:root th{font-size:var(--fs-small);font-weight:700}
+:root:root:root .dialog .row{gap:var(--sp-3);margin-top:var(--sp-2)}
+@media (max-width:700px){:root:root:root{--card-pad:18px;--stack:16px;--gap:12px;--fs-h2:1.4rem}}
+:root:root:root button:not(.avatar):not(.pw-eye){font-size:var(--fs-btn);font-weight:700}
+/* narrow screens: keep the header on one row even with three links */
+@media (max-width:520px){
+  :root:root:root .top{padding-left:var(--sp-3);padding-right:var(--sp-3);gap:var(--sp-2)}
+  :root:root:root .navlinks{gap:var(--sp-1);flex-wrap:nowrap;min-width:0}
+  :root:root:root .navlinks .link{padding:6px 6px;font-size:.8rem;white-space:nowrap}
+  :root:root:root .top .wordmark,:root:root:root .top .logo-word{font-size:1.05rem}
+}
+
+/* ice-cube personality: slightly squarer corners, bevelled glossy edge and a diagonal sheen */
+:root:root:root{--r-card:14px}
+:root:root:root .glass,:root:root:root .card,:root:root:root .vcard,:root:root:root .auth.card,:root:root:root .hero,:root:root:root .step,:root:root:root .role,:root:root:root .stats{box-shadow:0 8px 26px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.55),inset 1px 0 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(120,190,255,.25)}
+:root:root:root .card::before,:root:root:root .hero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.14) 0,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 68%,rgba(190,225,255,.08) 100%)}
+:root:root:root .card:not(.top),:root:root:root .hero{position:relative}
+@media (max-width:520px){:root:root:root .top:has(.navlinks .link:nth-of-type(3)) .wordmark{display:none}}
