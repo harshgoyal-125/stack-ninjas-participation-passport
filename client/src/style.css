@@ -698,3 +698,11 @@ html[data-theme=light][data-theme] body::before{background:radial-gradient(58% 3
 html[data-theme=light]:root:root:root .card,html[data-theme=light]:root:root:root .glass,html[data-theme=light]:root:root:root .hero,html[data-theme=light]:root:root:root .stats{background:linear-gradient(135deg,rgba(255,255,255,.86) 0,rgba(232,236,255,.6) 40%,rgba(255,240,250,.56) 64%,rgba(214,238,255,.78) 100%)!important}
 html[data-theme=dark]:root:root:root .glass,html[data-theme=dark]:root:root:root .card,html[data-theme=dark]:root:root:root .vcard,html[data-theme=dark]:root:root:root .auth.card,html[data-theme=dark]:root:root:root .hero,html[data-theme=dark]:root:root:root .step,html[data-theme=dark]:root:root:root .role,html[data-theme=dark]:root:root:root .stats{background:linear-gradient(135deg,rgba(255,255,255,.12) 0,rgba(170,235,255,.04) 38%,rgba(255,255,255,.02) 62%,rgba(190,240,255,.1) 100%),rgba(5,26,58,.74)!important}
 html[data-theme=dark]:root:root:root .card::before,html[data-theme=dark]:root:root:root .hero::before{background:linear-gradient(112deg,rgba(255,255,255,.12) 0,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 66%,rgba(160,235,255,.1) 100%)}
+/* landing page chips and pill: solid enough to read in both themes */
+html[data-theme=light]:root:root:root .fchip{background:rgba(255,255,255,.94)!important;color:#0b2447!important;-webkit-text-fill-color:#0b2447;opacity:1;border:1px solid rgba(60,120,200,.35)!important}
+html[data-theme=light]:root:root:root .pill-badge{background:rgba(255,255,255,.85)!important;color:#1d3f87!important;-webkit-text-fill-color:#1d3f87;border:1px solid rgba(60,100,200,.4)!important}
+html[data-theme=dark]:root:root:root .fchip{background:rgba(5,26,58,.82)!important;color:#eaf4ff!important;-webkit-text-fill-color:#eaf4ff;opacity:1}
+html[data-theme=dark]:root:root:root .pill-badge{background:rgba(5,26,58,.7)!important;color:#d6ecff!important;-webkit-text-fill-color:#d6ecff}
+html[data-theme=light]:root:root:root .lp-copy,html[data-theme=light]:root:root:root .lp-copy p,html[data-theme=light]:root:root:root .lp-copy .small{color:#2c4770;-webkit-text-fill-color:#2c4770}
+html[data-theme=light]:root:root:root .lp-copy h1{color:#0b2447}
+html[data-theme=light]:root:root:root .eyebrow,html[data-theme=light]:root:root:root .lp-sec .eyebrow{color:#06578f;-webkit-text-fill-color:#06578f}
