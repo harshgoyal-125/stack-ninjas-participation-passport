@@ -706,3 +706,14 @@ html[data-theme=dark]:root:root:root .pill-badge{background:rgba(5,26,58,.7)!imp
 html[data-theme=light]:root:root:root .lp-copy,html[data-theme=light]:root:root:root .lp-copy p,html[data-theme=light]:root:root:root .lp-copy .small{color:#2c4770;-webkit-text-fill-color:#2c4770}
 html[data-theme=light]:root:root:root .lp-copy h1{color:#0b2447}
 html[data-theme=light]:root:root:root .eyebrow,html[data-theme=light]:root:root:root .lp-sec .eyebrow{color:#06578f;-webkit-text-fill-color:#06578f}
+/* ===== mobile/real-device hardening: self-hosted font, literal values (no dependence on custom properties) ===== */
+html:root:root:root body,html:root:root:root button,html:root:root:root input,html:root:root:root select,html:root:root:root textarea,html:root:root:root table,html:root:root:root label{font-family:"Inter Variable",Inter,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+html:root:root:root .card,html:root:root:root .auth,html:root:root:root .auth.card,html:root:root:root .form{padding:24px;box-sizing:border-box;max-width:100%}
+html:root:root:root .center{padding:16px;box-sizing:border-box}
+html:root:root:root .auth label,html:root:root:root .form label{display:grid;gap:6px;text-align:left;width:100%}
+html:root:root:root .auth input,html:root:root:root .form input,html:root:root:root .auth select,html:root:root:root .form select{width:100%;box-sizing:border-box}
+@media (max-width:700px){html:root:root:root .card,html:root:root:root .auth,html:root:root:root .auth.card,html:root:root:root .form{padding:18px}html:root:root:root .wrap,html:root:root:root main.wrap{padding-left:14px;padding-right:14px;box-sizing:border-box}}
+html[data-theme=dark]:root:root:root .btn:disabled,html[data-theme=dark]:root:root:root button.btn[disabled]{background:rgba(70,100,150,.55)!important;color:#e6f0ff!important;-webkit-text-fill-color:#e6f0ff;text-shadow:none;box-shadow:none!important;cursor:not-allowed}
+html[data-theme=light]:root:root:root .btn:disabled,html[data-theme=light]:root:root:root button.btn[disabled]{background:#c9dcf5!important;color:#27456f!important;-webkit-text-fill-color:#27456f;text-shadow:none;box-shadow:none!important;cursor:not-allowed}
