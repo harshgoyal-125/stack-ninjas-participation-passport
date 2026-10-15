@@ -570,3 +570,46 @@ box-shadow:0 18px 44px rgba(0,4,24,.65),0 0 24px rgba(90,170,255,.1),inset 0 2px
 :root:root:root .card::before,:root:root:root .hero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.14) 0,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 68%,rgba(190,225,255,.08) 100%)}
 :root:root:root .card:not(.top),:root:root:root .hero{position:relative}
 @media (max-width:520px){:root:root:root .top:has(.navlinks .link:nth-of-type(3)) .wordmark{display:none}}
+
+/* ===== Arctic liquid-glass / transparent ice cube (colour, glass and motion layers; spacing tokens above are unchanged) ===== */
+@keyframes aurora{0%{transform:translate3d(-2%,0,0) scale(1)}50%{transform:translate3d(2%,-2%,0) scale(1.06)}100%{transform:translate3d(-1%,2%,0) scale(1.03)}}
+@keyframes motes{from{background-position:0 0,0 0,0 0}to{background-position:40px -520px,-60px -700px,20px -880px}}
+@keyframes cubefloat{0%{transform:translate3d(0,0,0) rotate(var(--r0))}50%{transform:translate3d(10px,-22px,0) rotate(calc(var(--r0) + 6deg))}100%{transform:translate3d(-8px,8px,0) rotate(calc(var(--r0) - 4deg))}}
+html body,html[data-theme=light] body{background:#031126!important}
+html[data-theme] body::before{inset:-12%!important;z-index:-3!important;filter:blur(22px);animation:aurora 36s ease-in-out infinite alternate!important;
+  background:radial-gradient(60% 38% at 20% 12%,rgba(0,224,255,.42),transparent 70%),radial-gradient(55% 34% at 82% 20%,rgba(64,140,255,.45),transparent 70%),radial-gradient(70% 30% at 50% 58%,rgba(70,255,220,.2),transparent 72%),radial-gradient(50% 40% at 85% 92%,rgba(0,150,255,.4),transparent 70%),radial-gradient(45% 36% at 10% 88%,rgba(120,200,255,.3),transparent 70%),linear-gradient(170deg,#031126,#06264a 55%,#041a38)!important}
+/* floating light particles: three tiles of tiny dots (cheap, no extra elements) */
+html[data-theme] body::after{inset:0!important;z-index:-2!important;opacity:.9!important;-webkit-mask-image:none!important;mask-image:none!important;animation:motes 90s linear infinite!important;
+  background-image:radial-gradient(circle,rgba(220,248,255,.9) 0 1.4px,transparent 2.4px),radial-gradient(circle,rgba(150,225,255,.7) 0 1.8px,transparent 3px),radial-gradient(circle,rgba(255,255,255,.6) 0 1px,transparent 2px)!important;
+  background-size:260px 260px,340px 340px,190px 190px!important;background-position:0 0,60px 90px,30px 40px!important;background-repeat:repeat!important}
+/* two decorative ice cubes that drift behind the content */
+#root::before,#root::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:22%;border:1px solid rgba(200,245,255,.6);
+  background:linear-gradient(135deg,rgba(255,255,255,.42) 0,rgba(150,225,255,.14) 36%,rgba(255,255,255,.06) 60%,rgba(190,240,255,.26) 100%);
+  box-shadow:inset 0 0 28px rgba(190,240,255,.4),inset 2px 2px 0 rgba(255,255,255,.5),0 18px 50px rgba(0,170,255,.28);backdrop-filter:blur(3px);animation:cubefloat 22s ease-in-out infinite alternate}
+#root::before{--r0:-14deg;width:150px;height:150px;left:3%;top:62%;opacity:.8}
+#root::after{--r0:18deg;width:104px;height:104px;right:5%;top:14%;opacity:.7;animation-duration:28s}
+/* panels = transparent ice: refraction sheen, frosted edge, cyan inner glow, layered shadow */
+:root:root:root .glass,:root:root:root .card,:root:root:root .vcard,:root:root:root .auth.card,:root:root:root .hero,:root:root:root .step,:root:root:root .role,:root:root:root .stats{
+  background:linear-gradient(135deg,rgba(255,255,255,.2) 0,rgba(170,235,255,.06) 38%,rgba(255,255,255,.03) 62%,rgba(190,240,255,.16) 100%),rgba(6,36,76,.46)!important;
+  backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+  border:1px solid rgba(190,240,255,.5)!important;
+  box-shadow:0 18px 50px rgba(0,8,30,.5),0 2px 0 rgba(255,255,255,.08),0 0 28px rgba(0,200,255,.12),inset 0 0 34px rgba(150,225,255,.1),inset 0 1px 0 rgba(255,255,255,.7),inset 1px 0 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,180,255,.4)!important}
+:root:root:root .card::before,:root:root:root .hero::before{background:linear-gradient(112deg,rgba(255,255,255,.26) 0,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 66%,rgba(160,235,255,.16) 100%)}
+:root:root:root .card{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+:root:root:root .card:hover,:root:root:root .step:hover,:root:root:root .role:hover,:root:root:root .state:hover{transform:perspective(900px) translateY(-4px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));border-color:rgba(220,250,255,.85)!important;box-shadow:0 24px 60px rgba(0,8,30,.55),0 0 44px rgba(0,210,255,.3),inset 0 0 40px rgba(170,235,255,.16),inset 0 1px 0 rgba(255,255,255,.85)!important}
+:root:root:root .top{background:rgba(4,30,66,.55)!important;backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);border-bottom:1px solid rgba(190,240,255,.4);box-shadow:0 8px 30px rgba(0,8,30,.4),0 1px 0 rgba(255,255,255,.2) inset}
+:root:root:root .top [aria-current=page],:root:root:root .top .active{border-bottom:2px solid #7FE7FF;text-shadow:0 0 14px rgba(0,225,255,.8);box-shadow:0 8px 14px -10px rgba(0,225,255,.9)}
+:root:root:root .wrap>h2,:root:root:root .chart-head h3{background:linear-gradient(90deg,#fff,#a8ecff 60%,#6fd8ff);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+/* luminous liquid-glass buttons */
+:root:root:root .btn,:root:root:root .btn.big,:root:root:root .btn.small{background:linear-gradient(180deg,rgba(255,255,255,.75) 0,rgba(150,235,255,.9) 45%,rgba(60,185,240,.95) 100%)!important;color:#03203f!important;border:1px solid rgba(255,255,255,.8)!important;box-shadow:0 8px 24px rgba(0,190,255,.35),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -6px 12px rgba(0,120,200,.25)!important;transition:transform .15s ease,box-shadow .2s ease,filter .2s ease}
+:root:root:root .btn:hover,:root:root:root .btn:focus-visible{filter:brightness(1.08);box-shadow:0 12px 34px rgba(0,215,255,.55),inset 0 1px 0 #fff,inset 0 -6px 12px rgba(0,120,200,.2)!important;color:#021a33!important;transform:translateY(-2px)}
+:root:root:root .btn:active,:root:root:root .ghost:active{transform:translateY(1px) scale(.97);filter:brightness(.96)}
+:root:root:root .ghost,:root:root:root .tabs button,:root:root:root .chip{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(150,225,255,.06))!important;border:1px solid rgba(190,240,255,.5)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 14px rgba(0,10,40,.3);transition:transform .15s ease,box-shadow .2s ease,background .2s ease}
+:root:root:root .ghost:hover,:root:root:root .tabs button:hover,:root:root:root .chip:hover{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(150,235,255,.14))!important;box-shadow:0 0 22px rgba(0,210,255,.4),inset 0 1px 0 rgba(255,255,255,.6);transform:translateY(-1px);color:#fff!important}
+:root:root:root input,:root:root:root select,:root:root:root textarea{background:rgba(4,28,62,.55)!important;border:1px solid rgba(170,235,255,.4)!important;transition:border-color .2s,box-shadow .2s}
+:root:root:root input:focus,:root:root:root select:focus,:root:root:root textarea:focus{border-color:#7FE7FF!important;box-shadow:0 0 0 3px rgba(0,225,255,.25),0 0 18px rgba(0,225,255,.3)!important;outline:none}
+:root:root:root .dialog{animation:pagein .25s ease both}
+@media (max-width:700px){#root::before{width:90px;height:90px}#root::after{width:64px;height:64px}html[data-theme] body::before{filter:blur(14px)}html[data-theme] body::after{background-size:200px 200px,260px 260px,150px 150px!important;animation-duration:140s!important}:root:root:root .card,:root:root:root .glass,:root:root:root .top{backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%)}}
+@media (hover:none){:root:root:root .card{transform:none!important}}
+@media (prefers-reduced-motion:reduce){html[data-theme] body::before,html[data-theme] body::after,#root::before,#root::after{animation:none!important}:root:root:root .card{transform:none!important;transition:none}}
+@media (max-width:700px){#root::after{display:none}}
